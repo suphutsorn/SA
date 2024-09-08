@@ -1,0 +1,48 @@
+.header {
+    background-color: #F4C542;
+    padding: 10px 20px;
+    margin: 0;
+    text-align: left;
+    width: 100vw;  /* ใช้ความกว้างเท่ากับความกว้างของ viewport */
+    box-sizing: border-box;
+    box-shadow: 0px 4px 2px -2px gray;
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    position: relative; 
+    z-index: 1;
+}
+
+.logo {
+    color: #001529;
+    font-size: 26px;
+    font-weight: bold;
+    margin-right: auto;
+    font-family: Arial, sans-serif;
+}
+
+.menu {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+}
+
+.link {
+    color: #001529;
+    font-size: 16px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s;
+    font-family: Arial, sans-serif;
+}
+
+.button {
+    background-color: #001529;
+    color: #ffcc00;
+    border-color: #001529;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 5px 15px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    margin-left: auto;
+}

@@ -1,0 +1,348 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: rgba(70, 63, 63, 0.931);
+    width: 100%; /* ปรับให้กว้างเต็มหน้าจอ */
+    min-height: 100vh; /* ให้ความสูงอย่างน้อยเท่ากับความสูงของ viewport */
+    overflow-y: auto; /* อนุญาตให้เลื่อนหน้าเว็บในแนวตั้ง */
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+.container {
+    position: relative;
+    width: 100%; /* กำหนดให้ความกว้างเต็มหน้าจอ */
+    min-height: 100vh; /* ปรับให้ความสูงอย่างน้อยเท่ากับความสูงของ viewport */
+}
+
+/* สไตล์สำหรับดาว */
+
+/* กระจายดาวทั่วหน้าจอด้วยระยะห่างที่มากขึ้น */
+.star {
+    position: absolute;
+    width: 100px; /* ขนาดของดาว */
+}
+
+/* กระจายดาวทั่วหน้าจอด้วยระยะห่างที่มากขึ้น */
+.star-1 {
+    top: 50px;
+    left: 50px;
+    width: 150px;
+}
+
+.star-2 {
+    top: 300px;
+    right: 100px;
+}
+
+.star-3 {
+    top: 600px;
+    left: 200px;
+}
+
+.star-4 {
+    top: 100px;
+    right: 300px;
+}
+
+.star-5 {
+    top: 900px;
+    left: 150px;
+}
+
+.star-6 {
+    top: 1200px;
+    right: 200px;
+}
+
+.star-7 {
+    top: 200px;
+    left: 500px;
+}
+
+.star-8 {
+    top: 1500px;
+    left: 300px;
+}
+
+.star-9 {
+    top: 700px;
+    right: 450px;
+}
+
+.star-10 {
+    top: 1700px;
+    left: 100px;
+}
+
+.star-11 {
+    top: 2000px;
+    right: 100px;
+}
+
+.star-12 {
+    top: 2300px;
+    left: 250px;
+    width: 150px;
+}
+
+.star-13 {
+    top: 2600px;
+    right: 150px;
+}
+
+.star-14 {
+    top: 2900px;
+    left: 400px;
+}
+
+.star-15 {
+    top: 3200px;
+    right: 250px;
+    width: 200px;
+}
+
+.star-16 {
+    top: 3500px;
+    left: 150px;
+    width: 150px;
+}
+
+.star-17 {
+    top: 3800px;
+    right: 200px;
+}
+
+.star-18 {
+    top: 4100px;
+    left: 50px;
+}
+
+.star-19 {
+    top: 4400px;
+    right: 100px;
+    width: 150px;
+}
+
+.star-20 {
+    top: 4700px;
+    left: 300px;
+}
+
+.star-21 {
+    top: 5000px;
+    right: 250px;
+}
+
+.star-22 {
+    top: 5300px;
+    left: 200px;
+}
+
+
+/* สไตล์สำหรับรูปรางวัล */
+/* สไตล์สำหรับรูปรางวัล */
+.popcorn-box {
+    position: absolute;
+    width: 150px;
+    z-index: 1;
+    left: 50.8%; /* จัดให้อยู่ตรงกลางแนวนอน */
+    transform: translateX(-50%); /* เลื่อนกึ่งกลางของรูปภาพไปตรงกลางหน้าจอ */
+}
+
+.popcorn-box:hover {
+    transform: translateX(-50%) scale(1.1); /* ขยายขนาดเมื่อ hover */
+}
+
+.popcorn-box-1 {
+    top: 290px;
+}
+
+.popcorn-box-2 {
+    top: 570px;
+}
+
+.popcorn-box-3 {
+    top: 890px;
+    width: 180px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-4 {
+    top: 1110px;
+}
+
+.popcorn-box-5 {
+    top: 1360px;
+    width: 170px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-6 {
+    top: 1610px;
+    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-7 {
+    top: 1850px;
+    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-8 {
+    top: 2120px;
+    width: 170px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-9 {
+    top: 2390px;
+    width: 170px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-10 {
+    top: 2560px;
+    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-11 {
+    top: 2870px;
+    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-12 {
+    top: 3100px;
+    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-13 {
+    top: 3510px;
+    width: 370px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-14 {
+    top: 3740px;
+    width: 390px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-15 {
+    top: 4100px;
+    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-16 {
+    top: 4590px;
+    width: 480px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-17 {
+    top: 4890px;
+    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+.popcorn-box-18 {
+    top: 5260px;
+    width: 350px; /* ปรับขนาดตามที่ต้องการ */
+}
+
+
+
+/* สไตล์สำหรับกล่องข้อความ */
+.popcorn-label {
+    position: absolute;
+    width: 200px;
+    text-align: center;
+    font-size: 15px;
+    background-color: white;
+    color: black;
+    border-radius: 10px;
+    padding: 10px;
+    z-index: 2; /* นำมาอยู่ข้างหน้า center-image */
+    left: 51%; /* จัดให้อยู่ตรงกลางแนวนอน */
+    transform: translateX(-50%); /* เลื่อนกึ่งกลางของกล่องไปตรงกลางหน้าจอ */
+}
+
+.popcorn-label-1 {
+    top: 505px;
+}
+
+.popcorn-label-2 {
+    top: 795px;
+}
+
+.popcorn-label-3 {
+    top: 1060px;
+}
+
+.popcorn-label-4 {
+    top: 1300px;
+}
+
+.popcorn-label-5 {
+    top: 1550px;
+}
+
+.popcorn-label-6 {
+    top: 1800px;
+}
+
+.popcorn-label-7 {
+    top: 2040px;
+}
+
+.popcorn-label-8 {
+    top: 2315px;
+}
+
+.popcorn-label-9 {
+    top: 2500px;
+}
+
+.popcorn-label-10 {
+    top: 2790px;
+}
+
+.popcorn-label-11 {
+    top: 3050px;
+}
+
+.popcorn-label-12 {
+    top: 3390px;
+}
+
+.popcorn-label-13 {
+    top: 3660px;
+}
+
+.popcorn-label-14 {
+    top: 3970px;
+}
+
+.popcorn-label-15 {
+    top: 4430px;
+    left: 51.9%;
+}
+
+.popcorn-label-16 {
+    top: 4770px;
+    left: 51.9%;
+}
+
+.popcorn-label-17 {
+    top: 5130px;
+    left: 51.9%;
+}
+
+.popcorn-label-18 {
+    top: 5470px;
+    left: 51.9%;
+}
+
+
+
+/* สไตล์สำหรับ Center Image */
+.center-image {
+    position: absolute;
+    top: 100px; /* เลื่อนลงมาต่ำกว่าเดิม */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 0; /* Center image อยู่หลัง popcorn และฉลาก */
+    max-width: 200px;
+    height: 5430px; /* ปรับขนาดให้ใหญ่ขึ้น */
+}

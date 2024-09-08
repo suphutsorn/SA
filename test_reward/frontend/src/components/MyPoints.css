@@ -1,0 +1,94 @@
+/* Main content area */
+.my-points-container {
+    text-align: left; /* จัดตำแหน่งข้อความไปทางขวา */
+}
+
+.my-points-container h2 {
+    margin-left: auto; /* เลื่อนข้อความไปทางขวาสุด */
+    margin-left: 110px; /* ปรับระยะห่างจากขอบขวา */
+    display: inline-block; /* ทำให้ margin-left ทำงาน */
+    color:#FFF
+}
+
+
+.points-content {
+    display: flex;
+    justify-content: space-between;
+    background-color: #F4C542;
+    padding: 0px;
+    width: 1440px; 
+    max-width: 1252px; 
+    height: 300px;
+    border-radius: 20px;
+    align-items: center; 
+    margin: 0 auto; 
+    z-index: 1; /* เพิ่ม z-index เพื่อให้อยู่ในเลเยอร์ที่เหมาะสม */
+    position: relative; /* ให้แน่ใจว่าอยู่ในเลเยอร์เดียวกัน */
+    
+}
+
+/* Profile section */
+.profile-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    font-weight: bold;
+}
+
+.profile-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; 
+}
+
+/* Divider ตัวแบ่ง */
+.divider {
+    width: 5px;
+    background-color: #000;
+    height: 250px;
+}
+
+/* Points section */
+.points-section {
+    flex: 1;
+    text-align: center;
+}
+
+/* รูปเหรียญ */
+.points-icon {
+    width: 70px;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+.balance {
+    font-size: 48px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.points-section p {
+    margin: 5px 0;
+}
+
+.description {
+    font-size: 14px;
+    color: #333;
+}
+
+/* History button */
+.history-button {
+    background-color: #D9534F;
+    color: #FFF;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    margin-top: 10px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.history-button:hover {
+    background-color: #c9423f; 
+}
