@@ -3,39 +3,125 @@ import { Link } from 'react-router-dom';
 import axios from 'axios'; 
 import './Reward.css';
 import RewardPopup from '../Popup/RewardPopup/RewardPopup';
+import { CreateReward, GetReward, GetRewardId } from '../../services/http/index'; // Import API calls
+import { RewardInterface  } from "../../interfaces/IReward";  /* ไม่ได้ใช้ */
+import { useNavigate } from 'react-router-dom';
 
 
-
-interface Reward {
-  ID: number;
-  imageUrl: string;
-  reward_name: string;
-  points: number;
-  status: boolean;
-  Discount:   number;
-  Reward:  string;
-  Ticket:  string;
-  Reward_time: Date;
-  
-}
 
 
 const Reward: React.FC = () => {
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
-  const [userPoints, setUserPoints] = useState(100);
-  const [userName, setUserName] = useState('Suphutsorn Soisuwan'); // เก็บชื่อผู้ใช้ใน state
-   const [message, setMessage] = useState<string | null>(null); // เพิ่ม state สำหรับข้อความแสดงสถานะ
+  
+    const apiUrl = "http://localhost:8080/api";
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [selectedReward, setSelectedReward] = useState<RewardInterface | null>(null);
+    const [userPoints, setUserPoints] = useState(100);
+    const [userName, setUserName] = useState('Suphutsorn Soisuwan'); // เก็บชื่อผู้ใช้ใน state
+    const [message, setMessage] = useState<string | null>(null); // เพิ่ม state สำหรับข้อความแสดงสถานะ
+    const [pointsRequired, setPointsRequired] = useState<string>(''); // สร้าง state สำหรับเก็บจำนวนคะแนน
+    const [rewardAvailability, setRewardAvailability] = useState<string>(''); // สร้าง state สำหรับสถานะรางวัล
+    const navigate = useNavigate(); // สร้าง navigate function
+  
+    /*ลิ้ง user กับ point ไปหน้า history */
+    const goToHistory = () => {
+      console.log("Sending to history:", { userPoints, userName });
+      navigate('/history', {
+        state: { userPoints, userName }, // ส่งค่า state
+      });
+    };
+  
+    const fetchRewardData = async (RewardName: string) => {
+      try {
+        const rewards: RewardInterface[] = await GetReward(); // ดึงข้อมูลรางวัลจาก backend
+        if (rewards && RewardName) {
+          const reward = rewards.find((r: RewardInterface) => r.RewardName === RewardName); // ค้นหาตามชื่อรางวัล
+          if (reward) {
+            setPointsRequired(`${reward.Points} points`); // คะแนนที่ต้องใช้ในการแลกรางวัล
+            const rewardAvailability = reward.Status ? 'Available' : 'Out of Stock'; // สถานะของรางวัล
+            setRewardAvailability(rewardAvailability);
+          } else {
+            console.error(`Reward with name ${RewardName} not found.`);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching reward data:', error);
+      }
+    };
+  
+    const handleImageClick = (reward: RewardInterface) => {
+      setSelectedReward(reward);
+      setIsPopupOpen(true);
+    };
+  
+    const handleClosePopup = () => {
+      setIsPopupOpen(false);
+      setSelectedReward(null);
+    };
+  
+    // ฟังก์ชันเพื่ออัปเดตสถานะการแลกรางวัล
+    const handleConfirmReward = async () => {
+      if (selectedReward) {
+        // ตรวจสอบว่าผู้ใช้มีคะแนนเพียงพอ
+        if (userPoints < selectedReward.Points!) {
+          setMessage('Your points are insufficient to redeem this reward.');
+          alert('You do not have enough points to redeem this reward!');
+          return; // หยุดการทำงานของฟังก์ชัน หากคะแนนไม่พอ
+        }
+    
+        // อัปเดตคะแนนของผู้ใช้ใน Frontend
+        setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
+    
+        // อัปเดตสถานะของรางวัลใน Frontend
+        setRewards(prevRewards =>
+          prevRewards.map(reward =>
+            reward.RewardName === selectedReward.RewardName
+              ? { ...reward, Status: true }
+              : reward
+          )
+        );
+    
+        // บันทึกการเปลี่ยนแปลงลงฐานข้อมูล
+        await CreateReward({
+          ...selectedReward,
+          Status: true // อัปเดตสถานะเป็นแลกสำเร็จ
+        });
+    
+        // ปิด Popup
+        setIsPopupOpen(false);
+    
+        // แสดงข้อความเมื่อแลกของรางวัลสำเร็จ
+        setMessage('Reward redeemed successfully!');
+      }
+    };
+    
+  
+      
+  /* popup แสดงข้อความ ว่า เหรียญไม่พอ */
+  interface PopupProps {
+    message: string;
+    onClose: () => void;
+  }
+  
+  const Popup: React.FC<PopupProps> = ({ message, onClose }) => {
+    return (
+      <div className="popup-coin">
+        <div className="popup-content-coin">
+          <h2>{message}</h2>
+          <button onClick={onClose}>Close</button>
+        </div>
+      </div>
+    );
+  };
   
 
-
-  const [rewards, setRewards] = useState<Reward[]>([
+  //
+  const [rewards, setRewards] = useState<RewardInterface[]>([
     {
       ID:1,
       imageUrl: "popcorn.png",
-      reward_name: "1 BOX POPCORN M",
-      points: 2,
-      status: false, 
+      RewardName: "1 BOX POPCORN M",
+      Points: 2,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -44,9 +130,9 @@ const Reward: React.FC = () => {
     {
       ID:2,
       imageUrl: "combo m + discount.png",
-      reward_name: "1 COMBO SET M + DISCOUNT",
-      points: 4,
-      status: false, 
+      RewardName: "1 COMBO SET M + DISCOUNT",
+      Points: 4,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -55,9 +141,9 @@ const Reward: React.FC = () => {
     {
       ID: 3,
       imageUrl: "combo Lticket.png",
-      reward_name: "1 COMBO SET L + TICKET",
-      points: 6,
-      status: false, 
+      RewardName: "1 COMBO SET L + TICKET",
+      Points: 6,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -66,9 +152,9 @@ const Reward: React.FC = () => {
     {
       ID: 4,
       imageUrl: "supersizesetA.PNG",
-      reward_name: "1 SUPERSIZE SET A",
-      points: 9,
-      status: false,
+      RewardName: "1 SUPERSIZE SET A",
+      Points: 9,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -77,9 +163,9 @@ const Reward: React.FC = () => {
     {
       ID: 5,
       imageUrl: "gift.PNG",
-      reward_name: "GIFT",
-      points: 12,
-      status: false, 
+      RewardName: "GIFT",
+      Points: 12,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -88,9 +174,9 @@ const Reward: React.FC = () => {
     {
       ID: 6,
       imageUrl: "supersizesetB.png",
-      reward_name: "SUPERSIZE SET B + DISCOUNT ",
-      points: 15,
-      status: false,
+      RewardName: "SUPERSIZE SET B + DISCOUNT ",
+      Points: 15,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -99,9 +185,9 @@ const Reward: React.FC = () => {
     {
       ID: 7,
       imageUrl: "super c ticket.png",
-      reward_name: "SUPERSIZE SET C + TICKET",
-      points: 18,
-      status: false, 
+      RewardName: "SUPERSIZE SET C + TICKET",
+      Points: 18,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -110,9 +196,9 @@ const Reward: React.FC = () => {
     {
       ID: 8,
       imageUrl: "gift.PNG",
-      reward_name: "GIFT",
-      points: 21,
-      status: false,
+      RewardName: "GIFT",
+      Points: 21,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -121,9 +207,9 @@ const Reward: React.FC = () => {
     {
       ID: 9,
       imageUrl: "2 normalseat.png",
-      reward_name: "2 NORMAL SEATS",
-      points: 26,
-      status: false,
+      RewardName: "2 NORMAL SEATS",
+      Points: 26,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -132,9 +218,9 @@ const Reward: React.FC = () => {
     {
       ID: 10,
       imageUrl: "2 supersize discount.png",
-      reward_name: "2 SUPERSIZE SET A + DISCOUNT",
-      points: 32,
-      status: false,
+      RewardName: "2 SUPERSIZE SET A + DISCOUNT",
+      Points: 32,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -143,9 +229,9 @@ const Reward: React.FC = () => {
     {
       ID: 11,
       imageUrl: "2 premuim seat.png",
-      reward_name: "2 PERMUIM SEATS ",
-      points: 38,
-      status: false,
+      RewardName: "2 PERMUIM SEATS ",
+      Points: 38,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -154,9 +240,9 @@ const Reward: React.FC = () => {
     {
       ID: 12,
       imageUrl: "2 combo sets size L + 2 ticket.png",
-      reward_name: "2 COMBO SETS SIZE L + 2 TICKET",
-      points: 45,
-      status: false,
+      RewardName: "2 COMBO SETS SIZE L + 2 TICKET",
+      Points: 45,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -165,9 +251,9 @@ const Reward: React.FC = () => {
     {
       ID: 13,
       imageUrl: "3 premuim seats.png",
-      reward_name: "3 PREMUIM SEATS",
-      points: 50,
-      status: false, 
+      RewardName: "3 PREMUIM SEATS",
+      Points: 50,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -176,9 +262,9 @@ const Reward: React.FC = () => {
     {
       ID: 14,
       imageUrl: "3 premuim seat + 3 ticket.png",
-      reward_name: "3 PREMUIM SEATS + 3 TICKETS ",
-      points: 60,
-      status: false, 
+      RewardName: "3 PREMUIM SEATS + 3 TICKETS ",
+      Points: 60,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -187,9 +273,9 @@ const Reward: React.FC = () => {
     {
       ID: 15,
       imageUrl: "1 DIRECTOR PACKAGE .png",
-      reward_name: "1 DIRECTOR PACKAGE ",
-      points: 70,
-      status: false,
+      RewardName: "1 DIRECTOR PACKAGE ",
+      Points: 70,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -198,9 +284,9 @@ const Reward: React.FC = () => {
     {
       ID: 16,
       imageUrl: "4 premuim seats.png",
-      reward_name: " 4 PREMUIM SEATS",
-      points: 80,
-      status: false,
+      RewardName: " 4 PREMUIM SEATS",
+      Points: 80,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -209,9 +295,9 @@ const Reward: React.FC = () => {
     {
       ID: 17,
       imageUrl: "2 supersize set b + discount.png",
-      reward_name: "2 SUPERSIZE SET B + DISCOUNT ",
-      points: 90,
-      status: false,
+      RewardName: "2 SUPERSIZE SET B + DISCOUNT ",
+      Points: 90,
+      Status: false,
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -220,9 +306,9 @@ const Reward: React.FC = () => {
     {
       ID: 18,
       imageUrl: "10 seat new.png",
-      reward_name: "10 NORMAL SEATS + 2 SUPERSIZE SET C",
-      points: 100,
-      status: false, 
+      RewardName: "10 NORMAL SEATS + 2 SUPERSIZE SET C",
+      Points: 100,
+      Status: false, 
       Discount: 0,
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
@@ -231,63 +317,6 @@ const Reward: React.FC = () => {
     // เพิ่มรายการรางวัลอื่นๆ ที่เหลือที่นี่
   ]);
 
-  const handleImageClick = (reward: Reward) => {
-    setSelectedReward(reward);
-    setIsPopupOpen(true);
-  };
-
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-    setSelectedReward(null);
-  };
-
-  // ฟังก์ชันเพื่ออัปเดตสถานะการแลกรางวัล
-  const handleConfirmReward = async () => {
-    if (selectedReward) {
-      // ตรวจสอบว่าผู้ใช้มีคะแนนเพียงพอ
-      if (userPoints < selectedReward.points) {
-        setMessage('Your points are insufficient to redeem this reward.');
-        return;
-      }
-  
-      // อัปเดตสถานะใน Frontend ว่ารางวัลถูกแลกแล้ว
-      setRewards(prevRewards =>
-        prevRewards.map(reward =>
-          reward.reward_name === selectedReward.reward_name
-            ? { ...reward, status: true }
-            : reward
-        )
-      );
-  
-      // อัปเดตคะแนนของผู้ใช้ใน Frontend
-      setUserPoints(prevPoints => prevPoints - selectedReward.points);
-  
-      // ส่งข้อมูลการแลกรางวัลไปยัง Backend
-      try {
-        const response = await axios.post('/api/redeem', {
-          userName: userName,   // ส่งชื่อผู้ใช้
-          rewardName: selectedReward.reward_name,  // ส่งชื่อรางวัล
-          pointsUsed: selectedReward.points  // ส่งจำนวนคะแนนที่ใช้แลก
-        });
-  
-        if (response.status === 200) {
-          console.log("Redeemed successfully:", response.data.message);
-          setUserPoints(response.data.remainingPoints);  // อัปเดตคะแนนใหม่
-          setMessage("Redeem successful!"); // แจ้งผู้ใช้ว่าการแลกรางวัลสำเร็จ
-        } else {
-          console.error("Failed to redeem reward.");
-          setMessage("Failed to redeem reward. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error redeeming reward:", error);
-        setMessage("An error occurred. Please try again.");
-      }
-  
-      // ปิด Popup
-      setIsPopupOpen(false);
-    }
-  };
-  
 
 
   return (
@@ -326,11 +355,14 @@ const Reward: React.FC = () => {
           <h2>{userPoints}</h2></div>
           <p>Your Balance</p>
           <p className="description">Earn more points, redeem exciting gifts and enjoy your tbh experience</p>
-          {/* ใช้ Link เพื่อเชื่อมไปยังหน้า /history */}
-          <Link to="/History">
-            <button className="history-button">HISTORY</button>
-            
-          </Link>
+          <Link
+              to={{
+                  pathname: "/history", // URL ของหน้าประวัติ
+                  
+             }}
+              >
+              <button className="history-button" onClick={goToHistory} >HISTORY</button>
+            </Link>
           
         </div>
       </div>
@@ -396,7 +428,7 @@ const Reward: React.FC = () => {
         <img
           key={index}
           src={reward.imageUrl}
-          alt={reward.reward_name}
+          alt={reward.RewardName}
           className={`popcorn-box popcorn-box-${index + 1}`}
           onClick={() => handleImageClick(reward)}
         />
@@ -405,7 +437,7 @@ const Reward: React.FC = () => {
       {/* Popcorn Labels */}
       {rewards.map((reward, index) => (
         <div key={index} className={`popcorn-label popcorn-label-${index + 1}`}>
-          {reward.reward_name}
+          {reward.RewardName}
         </div>
       ))}
       {/* Points */}
@@ -435,22 +467,24 @@ const Reward: React.FC = () => {
           {rewards.map((reward, index) => (
         <div
           key={index}
-          className={`popcorn-label popcorn-label-${index + 1} ${reward.status ? 'changed-label' : ''}`}
+          className={`popcorn-label popcorn-label-${index + 1} ${reward.Status ? 'changed-label' : ''}`}
         >
-          {reward.status? "Changed" : reward.reward_name}
+          {reward.Status? "Changed" : reward.RewardName}
       </div>
           ))}
   </div>
 
 
 
-      {isPopupOpen && selectedReward && (
-        <RewardPopup
-          onClose={handleClosePopup}
-          onConfirm={handleConfirmReward}
-          reward={selectedReward}
-        />
-      )}
+  {isPopupOpen && selectedReward && (
+  <RewardPopup
+    onClose={handleClosePopup}
+    onConfirm={handleConfirmReward}
+    reward={selectedReward}
+    userPoints={userPoints} // เพิ่มการส่ง userPoints ไปยัง RewardPopup
+  />
+)}
+
     </div>
 
 

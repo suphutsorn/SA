@@ -776,6 +776,48 @@ body {
 }
 
 
+
+
+/* Popup.css  ของ ข้อความ เหรียญ ไม่เพียงพอ*/
+.popup-coin {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* สีพื้นหลังโปร่งใส */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .popup-content-coin {
+    background-color: white; /* สีพื้นหลังขาว */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+  
+  .popup-content-coin h2 {
+    margin-bottom: 15px;
+  }
+  
+  .popup-content-coin button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .popup-content-coin button:hover {
+    background-color: #0056b3;
+  }
+  
+
+
   
 
 

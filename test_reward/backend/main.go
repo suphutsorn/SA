@@ -1,36 +1,60 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"project/routes"
-	"project/entity"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"project/config"
+    "github.com/gin-gonic/gin"
+    "net/http"
+    "project/config"     // เชื่อมต่อกับการตั้งค่า database ที่แยกออกมา
+    "project/controller"
+    
 )
 
+const PORT = "8080"
+
 func main() {
-	// เชื่อมต่อฐานข้อมูล
-	db, err := gorm.Open(sqlite.Open("reward.db"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
 
-	// ทำการ Migrate ตาราง
-	db.AutoMigrate(&entity.Reward{}, &entity.Member{}, &entity.Payment{}, &entity.Seat{}, &entity.Ticket{})
+	// open connection database
+	config.ConnectionDB()
 
-	// ทำการ Seed ข้อมูล
-	config.SeedRewardData(db)
+	// Generate databases
+	config.SetupDatabase()
 
-
-	// ตั้งค่า Gin router
 	r := gin.Default()
 
-	// เรียกฟังก์ชันเพื่อตั้งค่าเส้นทางของรางวัล
-	routes.RewardRoutes(r)
+	r.Use(CORSMiddleware())
 
-	// เริ่มเซิร์ฟเวอร์ที่ port 8080
-	r.Run(":8080")
+	// เปลี่ยนเส้นทางของกลุ่ม route ให้มี prefix เป็น /api
+	router := r.Group("api")
+	{
+		// Member Routes
+		router.GET("/rewards", controller.ListRewards)          // เส้นทางสำหรับดึงข้อมูลรางวัลทั้งหมด
+        router.GET("/rewards/:id", controller.GetReward)        // ดึงข้อมูลรางวัลตาม ID
+        router.POST("/rewards", controller.CreateReward)        // สร้างรางวัล
+        router.PATCH("/rewards/:id", controller.UpdateReward)   // อัปเดตรางวัล
+        router.DELETE("/rewards/:id", controller.DeleteReward) 
+		
+		
+	}
 
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "API RUNNING... PORT: %s", PORT)
+	})
 
+	// Run the server
+	r.Run("localhost:" + PORT)
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
 }

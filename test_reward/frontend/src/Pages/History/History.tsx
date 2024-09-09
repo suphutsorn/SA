@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './History.css'; 
 
+import { useLocation } from 'react-router-dom';
+
 const HistoryPage: React.FC = () => {
+    const location = useLocation();
+    const { userPoints, userName } = location.state || { userPoints: 0, userName: 'Guest' };
     const [isPopupVisible, setPopupVisible] = useState(false);
     const redemptionDate = "15th July 2024";
 
@@ -22,9 +26,9 @@ const HistoryPage: React.FC = () => {
                 <div className="profile-picture">
                     <img src="account_circle.png" alt="Profile Icon" />
                 </div>
-                <div className="profile-name">Suphutsorn Soisuwan</div>
+                <div className="profile-name">{userName}</div>
                 <div className="reward-icon">
-                    8 POINTS
+                    {userPoints}
                 </div>
             </div>
             <div className="history-list">
