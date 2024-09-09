@@ -8,7 +8,7 @@ import (
 type Reward struct {
 	gorm.Model
 	
-	RewardName  string    `json:"reward_name"`   // ชื่อของรางวัล
+	RewardName  string    `json:"RewardName"`   // ชื่อของรางวัล
 	Discount    int       `json:"discount"`      // ส่วนลด
 	Reward      string    `json:"reward"`        // รายละเอียดของรางวัล
 	Ticket      string    `json:"ticket"`        // รายละเอียดของตั๋ว

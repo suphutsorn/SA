@@ -59,12 +59,14 @@ async function GetRewardId(id: number | undefined) {
     }
   }
 
-  // ฟังก์ชันเพื่อสร้างและส่งไปให้ Backend
   async function CreateReward(data: RewardInterface) {
+    // คัดลอกข้อมูล โดยตัด `id` และ `imageUrl` ออก
+    const { ID, imageUrl, ...rewardDataWithoutIdAndImageUrl } = data;
+  
     const requestOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(rewardDataWithoutIdAndImageUrl), // ส่งเฉพาะข้อมูลที่ต้องการ
     };
   
     let res = await fetch(`${apiUrl}/rewards`, requestOptions)
@@ -79,6 +81,7 @@ async function GetRewardId(id: number | undefined) {
   
     return res;
   }
+  
   
 
 
