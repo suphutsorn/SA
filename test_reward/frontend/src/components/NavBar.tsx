@@ -14,7 +14,7 @@ const Navbar: React.FC = () => (
       <Link to="/" className="link">Home</Link>
       <Link to="/myticket" className="link">MyTicket</Link>
      
-      <Link to="#" className="link">Reward</Link>
+      <Link to="/Reward" className="link">Reward</Link>
       <Link to="/login">
         <Button type="primary" className="button">Login</Button>
       </Link>

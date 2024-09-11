@@ -8,6 +8,7 @@ export interface RewardInterface {
     Status?:     boolean;
     Points?:    number;
     Reward_time?: Date;
+    Describtion?: string;
 
     
 }

@@ -1,15 +1,30 @@
 package entity
 
-import "gorm.io/gorm"
+
+import (
+	
+
+	"gorm.io/gorm"
+)
 
 type Member struct {
 	gorm.Model
-	Username   string    `json:"username"`       // ชื่อผู้ใช้
-	Password   string    `json:"password"`       // รหัสผ่าน
-	FirstName  string    `json:"first_name"`     // ชื่อจริง
-	LastName   string    `json:"last_name"`      // นามสกุล
-	Email      string    `json:"email"`          // อีเมล
-	TotalPoint int       `json:"total_point"`    // คะแนนสะสมของผู้ใช้
+	UserName   string
+	FirstName  string
+	LastName   string
+	Email      string
+	Password   string
+	TotalPoint int
+	Role       string
+
+	// GenderID ทำหน้าที่เป็น FK
+	GenderID uint
+	Gender   Gender `gorm:"foreignKey:GenderID"`
+
+	// ความสัมพันธ์กับ Ticket
+	Tickets []Ticket `gorm:"foreignKey:MemberID"`
+
+
 
 	// One-to-Many Relationship
 	Rewards    []Reward  `gorm:"foreignKey:MemberID" json:"rewards"`  // ความสัมพันธ์ One-to-Many กับ Reward

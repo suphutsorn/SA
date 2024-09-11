@@ -1,56 +1,78 @@
 import React, { useState } from 'react';
 import './Discount.css';
 import { Link } from 'react-router-dom';
-
+import { Table } from 'antd';
+import 'antd/dist/reset.css'; 
+import HistoryPage from '../History/History';
 const Discount: React.FC = () => {
     const [activeTab, setActiveTab] = useState('DISCOUNT');
+    const columns = [
+        {
+            key: 'TICKET',
+            title: 'TICKET',
+            dataIndex: 'TICKET',
+        },
+        {
+            key: 'FOOD',
+            title: 'FOOD',
+            dataIndex: 'FOOD',
+        },
+        {
+            key: 'DISCOUNT',
+            title: 'DISCOUNT',
+            dataIndex: 'DISCOUNT',
+        },
+        {
+            key: 'SEAT',
+            title: 'SEAT',
+            dataIndex: 'SEAT',
+        },
+        
+    ];
 
+    const data = [
+        {
+            id: '1',
+            TICKET: 'F1',
+            FOOD: 'popcorn',
+            DISCOUNT: 'DC10',
+            SEAT: '10/11/2000'
+        },
+        {
+            id: '2',
+            TICKET: 'F1',
+            FOOD: 'popcorn',
+            DISCOUNT: 'DC10',
+            SEAT: '10/11/2000'
+        },
+        {
+            id: '3',
+            TICKET: 'F1',
+            FOOD: 'popcorn',
+            DISCOUNT: 'DC10',
+            SEAT: '10/11/2000'
+        },
+    ]
     return (
         <div className="wrapper">
             <div className="page-title">
+                My Reward
                 <Link to="/" className="back-button">
                     BACK
                 </Link>
-                My Reward
+                
             </div>
-            <div className="container">
-                <div className="tabs">
-                    <div
-                        className={`tab ${activeTab === 'DISCOUNT' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('DISCOUNT')}
-                    >
-                        DISCOUNT
-                    </div>
-                    <Link 
-                        to="/ticket"
-                        className={`tab ${activeTab === 'TICKET' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('TICKET')}
-                    >
-                        TICKET
-                    </Link>
-                    <Link
-                        to="/rewardd"
-                        className={`tab ${activeTab === 'REWARD' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('REWARD')}
-                    >
-                        REWARD
-                    </Link>
-                </div>
-                <div className="rewards-list">
-                    {activeTab === 'DISCOUNT' && (
-                        <>
-                            <div className="reward-item">
-                                <span>DISCOUNT 50 BATH</span>
-                                <div className="count-circle">1</div>
-                            </div>
-                            <div className="reward-item">
-                                <span>DISCOUNT 100 BATH</span>
-                                <div className="count-circle">1</div>
-                            </div>
-                        </>
-                    )}
-                </div>
+            <div className="history-list">
+                <Table
+                    dataSource={data}
+                    columns={columns}
+                    pagination={{ pageSize: 5 }}
+                    rowClassName={(record, index) => (index % 2 === 0 ? 'even-row' : 'odd-row')}
+                    rowKey="id"
+                    
+                />
             </div>
+            
         </div>
     );
 };

@@ -1,18 +1,86 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import './History.css'; 
-
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Table, message } from 'antd';
+import 'antd/dist/reset.css';
+import './History.css';
+import { GetRewardById } from '../../services/http/index'; // Import API calls
+import { RewardInterface } from '../../interfaces/IReward'; // Import Reward Interface
 
 const HistoryPage: React.FC = () => {
     const location = useLocation();
-    const { userPoints, userName } = location.state || { userPoints: 0, userName: 'Guest' };
-    const [isPopupVisible, setPopupVisible] = useState(false);
-    const redemptionDate = "15th July 2024";
+    const { userPoints = 0, userName = 'Guest', rewardID = 4 } = location.state || {};
 
-    const togglePopup = () => {
-        setPopupVisible(!isPopupVisible);
+    const [reward, setReward] = useState<RewardInterface | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    const fetchReward = async () => {
+        console.log("Reward ID:", rewardID);
+
+        try {
+            if (rewardID) {
+                console.log("Fetching reward with ID:", rewardID);
+                const rewardData = await GetRewardById(rewardID);
+                
+                if (rewardData) {
+                    console.log("Reward data fetched:", rewardData);
+
+                    // Ensure correct data types
+                    const formattedReward: RewardInterface = {
+                        ...rewardData.data,
+                        Reward_time: new Date(rewardData.Reward_time), // Convert Reward_time to Date object
+                        Points: Number(rewardData.Points), // Convert Points to number
+                    };
+
+                    setReward(formattedReward);
+                } else {
+                    throw new Error("Failed to fetch reward data");
+                }
+            } else {
+                message.error('Reward ID is not provided.');
+            }
+        } catch (error) {
+            message.error('Failed to load reward. Please try again.');
+            console.error("Error fetching reward:", error);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        fetchReward();
+    }, [rewardID]);
+
+    const columns = [
+        {
+            key: 'Reward_time',
+            title: 'Reward Time',
+            dataIndex: 'reward_time',
+            render: (text: Date) => {
+                const date = new Date(text);
+                return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+            },
+        },
+        {
+            key: 'RewardName',
+            title: 'Reward Name',
+            dataIndex: 'RewardName',
+        },
+        {
+            key: 'Describtion',
+            title: 'Description',
+            dataIndex: 'Describtion',
+        },
+        {
+            key: 'Points',
+            title: 'Points',
+            dataIndex: 'points',
+            render: (text: number) => text.toString(), // Convert Points to string for display
+        },
+    ];
+
+    // Ensure that each record in dataSource has a unique ID
+    console.log(reward)
+    const dataSource = reward ? [reward] : [];
 
     return (
         <div className="wrapper">
@@ -28,33 +96,19 @@ const HistoryPage: React.FC = () => {
                 </div>
                 <div className="profile-name">{userName}</div>
                 <div className="reward-icon">
-                    {userPoints}
+                    {userPoints} Points
                 </div>
             </div>
             <div className="history-list">
-                <div className="history-item">
-                <div className="history-detail">
-                    <div className="rewardd-name">
-                         1 BOX POPCORN M
-                    </div>
-                    <div className="rewardd-points" onClick={togglePopup}>
-                        -2 POINTS
-                    </div>
-                </div>
-
-                </div>
+                <Table
+                    dataSource={dataSource}
+                    columns={columns}
+                    pagination={{ pageSize: 5 }}
+                    rowClassName={(record, index) => (index % 2 === 0 ? 'even-row' : 'odd-row')}
+                    rowKey="ID" // Ensure this key is unique
+                    loading={loading}
+                />
             </div>
-
-            {isPopupVisible && (
-                <div className="popup">
-                    <div className="popup-content">
-                        <h2>Points Detail</h2>
-                        <p>You have used 2 points to redeem 1 BOX POPCORN M.</p>
-                        <p>Date: {redemptionDate}</p> {/* ใช้ค่าจากตัวแปรหรือ props */}
-                        <button onClick={togglePopup}>Close</button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

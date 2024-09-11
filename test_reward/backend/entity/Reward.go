@@ -15,7 +15,7 @@ type Reward struct {
 	Status      bool    `json:"status"`        // สถานะของรางวัล เช่น available หรือ redeemed
 	Points      int       `json:"points"`        // จำนวนคะแนนที่ใช้แลกรางวัล (เปลี่ยนจาก string เป็น int)
 	Reward_time  time.Time `json:"reward_time"`   // เวลาในการแลกรางวัล
-
+	Describtion string	`json:"Describtion"` 
 	// Foreign Key (FK)
 	MemberID  *uint    `json:"member_id"`        // FK ไปยัง Member
 	Member    Member   `gorm:"foreignKey:MemberID"`  // ความสัมพันธ์กับ Member

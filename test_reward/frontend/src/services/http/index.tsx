@@ -16,7 +16,7 @@ async function GetReward() {
       },
     };
   
-    let res = await fetch(`${apiUrl}/reward`, requestOptions)
+    let res = await fetch(`${apiUrl}/rewards`, requestOptions)
       .then((res) => {
         if (res.status === 200) {
           return res.json();
@@ -28,12 +28,8 @@ async function GetReward() {
     return res;
 }
 
-async function GetRewardId(id: number | undefined) {
-    if (id === undefined) {
-      console.error("Reward ID is undefined");
-      return false;
-    }
-  
+// ฟังก์ชันเพื่อดึงข้อมูลรางวัลตาม ID
+async function GetRewardById(id: Number | undefined) {
     const requestOptions = {
       method: "GET",
       headers: {
@@ -41,24 +37,22 @@ async function GetRewardId(id: number | undefined) {
       },
     };
   
-    try {
-      const res = await fetch(`${apiUrl}/reward/${id}`, requestOptions);
+    let res = await fetch(`${apiUrl}/rewards/${id}`, requestOptions)
+      .then((res) => {
+        if (res.status === 200) {
+          return res.json(); // ถ้าสถานะเป็น 200 ส่งข้อมูลกลับมา
+        } else {
+          return false; // ถ้าไม่ใช่สถานะ 200 ส่งค่ากลับเป็น false
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching reward by ID:", error);
+        return false; // ส่งกลับ false หากเกิดข้อผิดพลาด
+      });
   
-      if (res.status === 200) {
-        return await res.json();
-      } else if (res.status === 404) {
-        console.error("Movie not found");
-        return false;
-      } else {
-        console.error("Failed to fetch movie, status code:", res.status);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error fetching movie by ID:", error);
-      return false;
-    }
+    return res; // ส่งข้อมูลรางวัลที่ได้กลับไป
   }
-
+  
   async function CreateReward(data: RewardInterface) {
     // คัดลอกข้อมูล โดยตัด `id` และ `imageUrl` ออก
     const { ID, imageUrl, ...rewardDataWithoutIdAndImageUrl } = data;
@@ -89,7 +83,7 @@ async function GetRewardId(id: number | undefined) {
 
   export { 
     GetReward, 
-    GetRewardId,
+    GetRewardById,
     CreateReward 
 
    };

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios'; 
 import './Reward.css';
 import RewardPopup from '../Popup/RewardPopup/RewardPopup';
-import { CreateReward, GetReward, GetRewardId } from '../../services/http/index'; // Import API calls
+import { CreateReward, GetReward, GetRewardById } from '../../services/http/index'; // Import API calls
 import { RewardInterface  } from "../../interfaces/IReward";  /* ไม่ได้ใช้ */
 import { useNavigate } from 'react-router-dom';
 
@@ -24,30 +24,32 @@ const Reward: React.FC = () => {
   
     /*ลิ้ง user กับ point ไปหน้า history */
     const goToHistory = () => {
-      console.log("Sending to history:", { userPoints, userName });
+      console.log("Sending to history:", { userPoints, userName});
+     
       navigate('/history', {
         state: { userPoints, userName }, // ส่งค่า state
       });
     };
   
-    const fetchRewardData = async (RewardName: string) => {
+    const fetchRewardDataById = async (id: number) => {
       try {
-        const rewards: RewardInterface[] = await GetReward(); // ดึงข้อมูลรางวัลจาก backend
-        if (rewards && RewardName) {
-          const reward = rewards.find((r: RewardInterface) => r.RewardName === RewardName); // ค้นหาตามชื่อรางวัล
+        const rewards: RewardInterface[] = await GetReward(); // ดึงข้อมูลรางวัลทั้งหมดจาก backend
+        if (rewards && id) {
+          // ค้นหารางวัลตาม id
+          const reward = rewards.find((r: RewardInterface) => r.ID === id);
           if (reward) {
             setPointsRequired(`${reward.Points} points`); // คะแนนที่ต้องใช้ในการแลกรางวัล
             const rewardAvailability = reward.Status ? 'Available' : 'Out of Stock'; // สถานะของรางวัล
             setRewardAvailability(rewardAvailability);
           } else {
-            console.error(`Reward with name ${RewardName} not found.`);
+            console.error(`Reward with id ${id} not found.`);
           }
         }
       } catch (error) {
         console.error('Error fetching reward data:', error);
       }
     };
-  
+    
     const handleImageClick = (reward: RewardInterface) => {
       setSelectedReward(reward);
       setIsPopupOpen(true);
@@ -126,6 +128,7 @@ const Reward: React.FC = () => {
       Reward: " BOX POPCORN M" ,
       Ticket: "-",
       Reward_time: new Date() ,
+      Describtion:"1 BOX POPCORN M น่ากินสุดๆๆเลย",
     },
     {
       ID:2,
@@ -137,6 +140,7 @@ const Reward: React.FC = () => {
       Reward: " COMBO SET M" ,
       Ticket: "-",
       Reward_time: new Date()  ,
+      Describtion:"น่ากินสุดๆๆเลย",
     },
     {
       ID: 3,
@@ -148,6 +152,7 @@ const Reward: React.FC = () => {
       Reward: " COMBO SET L " ,
       Ticket: "TICKET",
       Reward_time:new Date() ,
+      Describtion:"",
     },
     {
       ID: 4,
@@ -159,6 +164,7 @@ const Reward: React.FC = () => {
       Reward: " SUPERSIZE SET A" ,
       Ticket: "-",
       Reward_time:new Date(), 
+      Describtion:"น่ากินสุดๆๆเลย",
     },
     {
       ID: 5,
@@ -170,6 +176,7 @@ const Reward: React.FC = () => {
       Reward: "GIFT" ,
       Ticket: "-",
       Reward_time:new Date() ,
+      Describtion:"น่ากินสุดๆๆเลย",
     },
     {
       ID: 6,
@@ -181,6 +188,7 @@ const Reward: React.FC = () => {
       Reward: "SUPERSIZE SET B " ,
       Ticket: "-",
       Reward_time:new Date(), 
+      Describtion:"น่ากินสุดๆๆเลย",
     },
     {
       ID: 7,
@@ -192,6 +200,7 @@ const Reward: React.FC = () => {
       Reward: "SUPERSIZE SET C" ,
       Ticket: "TICKET",
       Reward_time:new Date() ,
+      Describtion:"",
     },
     {
       ID: 8,
@@ -203,6 +212,7 @@ const Reward: React.FC = () => {
       Reward: "GIFT" ,
       Ticket: "-",
       Reward_time:new Date(), 
+      Describtion:"",
     },
     {
       ID: 9,
@@ -214,6 +224,7 @@ const Reward: React.FC = () => {
       Reward: "1 BOX POPCORN M" ,
       Ticket: "-",
       Reward_time:new Date() , 
+      Describtion:"",
     },
     {
       ID: 10,
@@ -225,6 +236,7 @@ const Reward: React.FC = () => {
       Reward: "SUPERSIZE SET A" ,
       Ticket: "-",
       Reward_time:new Date() , 
+      Describtion:"",
     },
     {
       ID: 11,
@@ -236,6 +248,7 @@ const Reward: React.FC = () => {
       Reward: " PERMUIM SEATS " ,
       Ticket: "-",
       Reward_time:new Date() , 
+      Describtion:"",
     },
     {
       ID: 12,
@@ -247,6 +260,7 @@ const Reward: React.FC = () => {
       Reward: "COMBO SETS SIZE L" ,
       Ticket: "TICKET",
       Reward_time:new Date() , 
+      Describtion:"",
     },
     {
       ID: 13,
@@ -258,6 +272,7 @@ const Reward: React.FC = () => {
       Reward: "PREMUIM SEATS" ,
       Ticket: "-",
       Reward_time:new Date() ,
+      Describtion:"",
     },
     {
       ID: 14,
@@ -269,6 +284,7 @@ const Reward: React.FC = () => {
       Reward: " PREMUIM SEATS" ,
       Ticket: "TICKETS",
       Reward_time:new Date(),
+      Describtion:"",
     },
     {
       ID: 15,
@@ -280,6 +296,7 @@ const Reward: React.FC = () => {
       Reward: "1 DIRECTOR PACKAGE " ,
       Ticket: "-",
       Reward_time:new Date() , 
+      Describtion:"",
     },
     {
       ID: 16,
@@ -291,6 +308,7 @@ const Reward: React.FC = () => {
       Reward: "PREMUIM SEATS" ,
       Ticket: "-",
       Reward_time:new Date() , 
+      Describtion:"",
     },
     {
       ID: 17,
@@ -301,7 +319,8 @@ const Reward: React.FC = () => {
       Discount: 100,
       Reward: " SUPERSIZE SET B " ,
       Ticket: "-",
-      Reward_time:new Date(), 
+      Reward_time:new Date(),
+      Describtion:"", 
     },
     {
       ID: 18,
@@ -313,6 +332,7 @@ const Reward: React.FC = () => {
       Reward: "NORMAL SEATS" ,
       Ticket: "-",
       Reward_time:new Date(),
+      Describtion:"",
     },
     // เพิ่มรายการรางวัลอื่นๆ ที่เหลือที่นี่
   ]);
