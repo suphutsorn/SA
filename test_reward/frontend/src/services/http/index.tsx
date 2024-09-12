@@ -163,6 +163,8 @@ const fetchMemberProfile = async () => {
         const errorData = await response.json();
         console.error("Error fetching member profile:", errorData.error);
         throw new Error(errorData.error || 'Failed to fetch profile');
+
+        
     }
 };
 
