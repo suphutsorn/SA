@@ -10,7 +10,7 @@ import { RewardInterface } from '../../interfaces/IReward'; // Import Reward Int
 const HistoryPage: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { userPoints = 0, userName = 'Guest', rewardID = 4 } = location.state || {};
+    const { userPoints = 0, userName = 'Guest', rewardID = 1 } = location.state || {};
 
     const [reward, setReward] = useState<RewardInterface | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
