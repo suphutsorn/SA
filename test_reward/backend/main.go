@@ -5,7 +5,7 @@ import (
     "net/http"
     "project/config"     // เชื่อมต่อกับการตั้งค่า database ที่แยกออกมา
     "project/controller"
-    
+	"project/middlewares"
 )
 
 const PORT = "8080"
@@ -22,17 +22,23 @@ func main() {
 
 	r.Use(CORSMiddleware())
 
+	r.POST("/signup", controller.SignUp)
+	r.POST("/signin",controller.SignIn)
+
 	// เปลี่ยนเส้นทางของกลุ่ม route ให้มี prefix เป็น /api
-	router := r.Group("api")
+	router := r.Group("/api")
 	{
+		router.Use(middlewares.Authorizes())
 		// Member Routes
 		router.GET("/rewards", controller.ListRewards)          // เส้นทางสำหรับดึงข้อมูลรางวัลทั้งหมด
         router.GET("/rewards/:id", controller.GetReward)        // ดึงข้อมูลรางวัลตาม ID
         router.POST("/rewards", controller.CreateReward)        // สร้างรางวัล
         router.PATCH("/rewards/:id", controller.UpdateReward)   // อัปเดตรางวัล
-        router.DELETE("/rewards/:id", controller.DeleteReward) 
-		
-		
+        router.DELETE("/rewards/:id", controller.DeleteReward)  // ลบรางวัล
+		// Route สำหรับการล็อกอิน
+		router.POST("/signin", controller.Signin)
+
+        
 	}
 
 	r.GET("/", func(c *gin.Context) {
@@ -58,3 +64,4 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+

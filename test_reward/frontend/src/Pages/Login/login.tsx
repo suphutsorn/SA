@@ -89,7 +89,7 @@ const Login: React.FC = () => {
                     </Form.Item>
 
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" className="login-button "onClick={() => navigate('/Reward')}>
+                        <Button type="primary" htmlType="submit" className="login-button">
                             Login
                         </Button>
                     </Form.Item>

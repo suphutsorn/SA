@@ -22,7 +22,7 @@ type Member struct {
 	Gender   Gender `gorm:"foreignKey:GenderID"`
 
 	// ความสัมพันธ์กับ Ticket
-	Tickets []Ticket `gorm:"foreignKey:MemberID"`
+	
 
 
 

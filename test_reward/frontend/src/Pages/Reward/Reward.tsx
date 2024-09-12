@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios'; 
 import './Reward.css';
 import RewardPopup from '../Popup/RewardPopup/RewardPopup';
-import { CreateReward, GetReward, GetRewardById } from '../../services/http/index'; // Import API calls
+import { CreateReward, GetReward, GetRewardById,fetchMemberProfile } from '../../services/http/index'; // Import API calls
 import { RewardInterface  } from "../../interfaces/IReward";  /* ไม่ได้ใช้ */
 import { useNavigate } from 'react-router-dom';
 
@@ -15,12 +15,33 @@ const Reward: React.FC = () => {
     const apiUrl = "http://localhost:8080/api";
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [selectedReward, setSelectedReward] = useState<RewardInterface | null>(null);
-    const [userPoints, setUserPoints] = useState(100);
-    const [userName, setUserName] = useState('Suphutsorn Soisuwan'); // เก็บชื่อผู้ใช้ใน state
+    
+     
     const [message, setMessage] = useState<string | null>(null); // เพิ่ม state สำหรับข้อความแสดงสถานะ
     const [pointsRequired, setPointsRequired] = useState<string>(''); // สร้าง state สำหรับเก็บจำนวนคะแนน
     const [rewardAvailability, setRewardAvailability] = useState<string>(''); // สร้าง state สำหรับสถานะรางวัล
     const navigate = useNavigate(); // สร้าง navigate function
+
+    const [userName, setUserName] = useState('');
+    const [userPoints, setUserPoints] = useState(0);
+
+
+// ดึงข้อมูลและแสดงผลใน React component
+useEffect(() => {
+  const fetchProfile = async () => {
+      try {
+          const profile = await fetchMemberProfile();
+          if (profile) {
+              setUserName(profile.name);  // ตั้งค่า userName จาก backend
+              setUserPoints(profile.points);  // ตั้งค่า userPoints จาก backend
+          }
+      } catch (error) {
+          console.error('Failed to load profile:', error);
+      }
+  };
+
+  fetchProfile();
+}, []);
   
     /*ลิ้ง user กับ point ไปหน้า history */
     const goToHistory = () => {

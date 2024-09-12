@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Table, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import 'antd/dist/reset.css';
 import './History.css';
 import { GetRewardById } from '../../services/http/index'; // Import API calls
@@ -8,12 +9,23 @@ import { RewardInterface } from '../../interfaces/IReward'; // Import Reward Int
 
 const HistoryPage: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { userPoints = 0, userName = 'Guest', rewardID = 4 } = location.state || {};
 
     const [reward, setReward] = useState<RewardInterface | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     const fetchReward = async () => {
+        const memberID = localStorage.getItem('memberID');
+        const token = localStorage.getItem('token');
+    
+        console.log("Using Member ID:", memberID);
+    
+        if (!memberID || !token) {
+          message.error('Please log in first');
+          navigate('/Login');
+          return;
+        }
         console.log("Reward ID:", rewardID);
 
         try {
@@ -86,7 +98,7 @@ const HistoryPage: React.FC = () => {
         <div className="wrapper">
             <div className="page-title">
                 My History
-                <Link to="/" className="back-button">
+                <Link to="/Reward" className="back-button">
                     BACK
                 </Link>
             </div>

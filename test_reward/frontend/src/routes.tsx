@@ -10,7 +10,8 @@ import Login from './Pages/Login/login';
 const AppRoutes: React.FC = () => (
   <Routes>
     
-    <Route path="/" element={<Reward />} />
+    <Route path="/" element={<Login />} />
+    <Route path="/reward" element={<Reward />} />
     <Route path="/history" element={<HistoryPage />} />
     <Route path="/My reward" element={<Discount />} />
     <Route path="/ticket" element={<Ticket />} />
