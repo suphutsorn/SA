@@ -1,107 +1,137 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios'; 
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Reward.css';
 import RewardPopup from '../Popup/RewardPopup/RewardPopup';
-import { CreateReward, GetReward, GetRewardById } from '../../services/http/index'; // Import API calls
-import { RewardInterface  } from "../../interfaces/IReward";  /* ไม่ได้ใช้ */
-import { useNavigate } from 'react-router-dom';
-
-
-
+import { CreateReward, GetMembers } from '../../services/http/index'; 
+import { RewardInterface } from "../../interfaces/IReward";
+import { MembersInterface } from '../../interfaces/IMember';
+import { message } from "antd";
 
 const Reward: React.FC = () => {
+  const apiUrl = "http://localhost:8081/api";
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedReward, setSelectedReward] = useState<RewardInterface | null>(null);
+  const [userName, setUserName] = useState<string>('');
+  const [userPoints, setUserPoints] = useState<number>(0);
+  const [messageApi, contextHolder] = message.useMessage();
   
-    const apiUrl = "http://localhost:8080/api";
-    const [isPopupOpen, setIsPopupOpen] = useState(false);
-    const [selectedReward, setSelectedReward] = useState<RewardInterface | null>(null);
-    const [userPoints, setUserPoints] = useState(100);
-    const [userName, setUserName] = useState('Suphutsorn Soisuwan'); // เก็บชื่อผู้ใช้ใน state
-    const [message, setMessage] = useState<string | null>(null); // เพิ่ม state สำหรับข้อความแสดงสถานะ
-    const [pointsRequired, setPointsRequired] = useState<string>(''); // สร้าง state สำหรับเก็บจำนวนคะแนน
-    const [rewardAvailability, setRewardAvailability] = useState<string>(''); // สร้าง state สำหรับสถานะรางวัล
-    const navigate = useNavigate(); // สร้าง navigate function
+  const navigate = useNavigate();
 
-
-    
+  const getUserProfile = async () => {
+    const token = localStorage.getItem("token"); // ดึง token ที่เก็บไว้ใน localStorage
   
-    /*ลิ้ง user กับ point ไปหน้า history */
-    const goToHistory = () => {
-      console.log("Sending to history:", { userPoints, userName});
-     
-      navigate('/history', {
-        state: { userPoints, userName }, // ส่งค่า state
+    if (!token) {
+      messageApi.open({
+        type: "error",
+        content: "No token found.",
       });
-    };
-
-
+      return;
+    }
   
-    
-    
-    const handleImageClick = (reward: RewardInterface) => {
-      setSelectedReward(reward);
-      setIsPopupOpen(true);
-    };
+    const memberID = localStorage.getItem('memberID'); // ดึง memberID ที่เก็บไว้ใน localStorage
   
-    const handleClosePopup = () => {
-      setIsPopupOpen(false);
-      setSelectedReward(null);
-    };
+    if (!memberID) {
+      messageApi.open({
+        type: "error",
+        content: "No memberID found.",
+      });
+      return;
+    }
   
-    // ฟังก์ชันเพื่ออัปเดตสถานะการแลกรางวัล
-    const handleConfirmReward = async () => {
-      if (selectedReward) {
-        // ตรวจสอบว่าผู้ใช้มีคะแนนเพียงพอ
-        if (userPoints < selectedReward.Points!) {
-          setMessage('Your points are insufficient to redeem this reward.');
-          alert('You do not have enough points to redeem this reward!');
-          return; // หยุดการทำงานของฟังก์ชัน หากคะแนนไม่พอ
+    try {
+      let res = await fetch(`${apiUrl}/members/${memberID}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // ส่ง token ใน headers
         }
-    
-        // อัปเดตคะแนนของผู้ใช้ใน Frontend
-        setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
-    
-        // อัปเดตสถานะของรางวัลใน Frontend
-        setRewards(prevRewards =>
-          prevRewards.map(reward =>
-            reward.RewardName === selectedReward.RewardName
-              ? { ...reward, Status: true }
-              : reward
-          )
-        );
-    
-        // บันทึกการเปลี่ยนแปลงลงฐานข้อมูล
+      }).then((res) => {
+        if (res.status === 200) {
+          return res.json();
+        } else {
+          return { status: res.status, data: { error: "Failed to fetch user profile" } };
+        }
+      });
+  
+      if (res.status === 200) {
+        const { name, points } = res.data; // ดึงข้อมูล name และ points
+        setUserName(name.data);
+        setUserPoints(points.data);
+      } else {
+        messageApi.open({
+          type: "error",
+          content: res.data.error,
+        });
+      }
+    } catch (error) {
+      messageApi.open({
+        type: "error",
+        content: "An error occurred.",
+      });
+    }
+  };
+  
+  useEffect(() => {
+    getUserProfile();
+  }, []);
+
+  const handleImageClick = (reward: RewardInterface) => {
+    setSelectedReward(reward);
+    setIsPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+    setSelectedReward(null);
+  };
+
+  const handleConfirmReward = async () => {
+    if (selectedReward) {
+      if (userPoints < selectedReward.Points!) {
+        messageApi.open({
+          type: "error",
+          content: 'You do not have enough points to redeem this reward!',
+        });
+        return;
+      }
+
+      setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
+      setRewards(prevRewards =>
+        prevRewards.map(reward =>
+          reward.RewardName === selectedReward.RewardName
+            ? { ...reward, Status: true }
+            : reward
+        )
+      );
+
+      try {
         await CreateReward({
           ...selectedReward,
-          Status: true // อัปเดตสถานะเป็นแลกสำเร็จ
+          Status: true
         });
-    
-        // ปิด Popup
+        messageApi.open({
+          type: "success",
+          content: 'Reward redeemed successfully!',
+        });
         setIsPopupOpen(false);
-    
-        // แสดงข้อความเมื่อแลกของรางวัลสำเร็จ
-        setMessage('Reward redeemed successfully!');
+      } catch (error) {
+        messageApi.open({
+          type: "error",
+          content: "An error occurred while redeeming the reward.",
+        });
       }
-    };
-    
-  
-      
-  /* popup แสดงข้อความ ว่า เหรียญไม่พอ */
-  interface PopupProps {
-    message: string;
-    onClose: () => void;
-  }
-  
-  const Popup: React.FC<PopupProps> = ({ message, onClose }) => {
-    return (
-      <div className="popup-coin">
-        <div className="popup-content-coin">
-          <h2>{message}</h2>
-          <button onClick={onClose}>Close</button>
-        </div>
-      </div>
-    );
+    }
   };
+
+  const goToHistory = () => {
+    navigate('/history', { state: { userPoints, userName } });
+  };
+
+  
+    
+    
+   
   
 
   //
@@ -376,7 +406,42 @@ const Reward: React.FC = () => {
       </div>
     </div>
 
-   
+      {/* Popcorn Boxes */}
+      {rewards.map((reward, index) => (
+        <img
+          key={index}
+          src={reward.imageUrl}
+          alt={reward.RewardName}
+          className={`popcorn-box popcorn-box-${index + 1}`}
+          onClick={() => handleImageClick(reward)}
+        />
+      ))}
+
+      {/* Popcorn Labels */}
+      {rewards.map((reward, index) => (
+        <div key={index} className={`popcorn-label popcorn-label-${index + 1}`}>
+          {reward.RewardName}
+        </div>
+      ))}
+      {/* Points */}
+      <img src="2 point.png" alt="point 2" className="points points-2" />
+      <img src="4 point.png" alt="point 4" className="points points-4" />
+      <img src="6 point.png" alt="point 6" className="points points-6" />
+      <img src="9 point.png" alt="point 9" className="points points-9" />
+      <img src="12 point.png" alt="point 12" className="points points-12" />
+      <img src="15 point.png" alt="point 15" className="points points-15" />
+      <img src="18 point.png" alt="point 18" className="points points-18" />
+      <img src="21 point.png" alt="point 21" className="points points-21" />
+      <img src="32 point.png" alt="point 26" className="points points-26" />
+      <img src="32 points.png" alt="point 32" className="points points-32" />
+      <img src="38 point.png" alt="point 38" className="points points-38" />
+      <img src="45 point.png" alt="point 45" className="points points-45" />
+      <img src="50 point.png" alt="point 50" className="points points-50" />
+      <img src="60 point.png" alt="point 60" className="points points-60" />
+      <img src="70 point.png" alt="point 70" className="points points-70" />
+      <img src="80 point.png "alt="point 80" className="points points-80" />
+      <img src="90 point.png" alt="point 90" className="points points-90" />
+      <img src="100 point.png" alt="point 100" className="points points-100" />
 
 
       {/* Stars */}
@@ -431,42 +496,6 @@ const Reward: React.FC = () => {
 
 
 
-      {/* Popcorn Boxes */}
-      {rewards.map((reward, index) => (
-        <img
-          key={index}
-          src={reward.imageUrl}
-          alt={reward.RewardName}
-          className={`popcorn-box popcorn-box-${index + 1}`}
-          onClick={() => handleImageClick(reward)}
-        />
-      ))}
-
-      {/* Popcorn Labels */}
-      {rewards.map((reward, index) => (
-        <div key={index} className={`popcorn-label popcorn-label-${index + 1}`}>
-          {reward.RewardName}
-        </div>
-      ))}
-      {/* Points */}
-      <img src="2 point.png" alt="point 2" className="points points-2" />
-      <img src="4 point.png" alt="point 4" className="points points-4" />
-      <img src="6 point.png" alt="point 6" className="points points-6" />
-      <img src="9 point.png" alt="point 9" className="points points-9" />
-      <img src="12 point.png" alt="point 12" className="points points-12" />
-      <img src="15 point.png" alt="point 15" className="points points-15" />
-      <img src="18 point.png" alt="point 18" className="points points-18" />
-      <img src="21 point.png" alt="point 21" className="points points-21" />
-      <img src="32 point.png" alt="point 26" className="points points-26" />
-      <img src="32 points.png" alt="point 32" className="points points-32" />
-      <img src="38 point.png" alt="point 38" className="points points-38" />
-      <img src="45 point.png" alt="point 45" className="points points-45" />
-      <img src="50 point.png" alt="point 50" className="points points-50" />
-      <img src="60 point.png" alt="point 60" className="points points-60" />
-      <img src="70 point.png" alt="point 70" className="points points-70" />
-      <img src="80 point.png "alt="point 80" className="points points-80" />
-      <img src="90 point.png" alt="point 90" className="points points-90" />
-      <img src="100 point.png" alt="point 100" className="points points-100" />
 
       
 

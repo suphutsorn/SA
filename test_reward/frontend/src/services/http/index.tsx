@@ -6,7 +6,7 @@ import { RewardInterface  } from "../../interfaces/IReward";
 
 
 
-const apiUrl = "http://localhost:8080/api";
+const apiUrl = "http://localhost:8081/api";
 
 // ฟังก์ชันเพื่อดึงข้อมูลรางวัลทั้งหมด
 async function GetReward() {
@@ -77,21 +77,6 @@ async function GetRewardById(id: Number | undefined) {
     return res;
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
 
 
   // ฟังก์ชันเพื่อดึงข้อมูลสมาชิกทั้งหมด
