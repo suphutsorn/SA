@@ -117,61 +117,41 @@ useEffect(() => {
 
   const handleConfirmReward = async () => {
     if (selectedReward) {
-        // ตรวจสอบว่าผู้ใช้มีคะแนนเพียงพอในการแลกรางวัลหรือไม่
-        if (userPoints < selectedReward.Points!) {
-            messageApi.open({
-                type: "error",
-                content: 'You do not have enough points to redeem this reward!',
-            });
-            return;
-        }
+      if (userPoints < selectedReward.Points!) {
+        messageApi.open({
+          type: "error",
+          content: 'You do not have enough points to redeem this reward!',
+        });
+        return;
+      }
 
-        // ลบคะแนนของผู้ใช้ใน frontend ก่อนแลกรางวัล
-        setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
-        setRewards(prevRewards =>
-            prevRewards.map(reward =>
-                reward.RewardName === selectedReward.RewardName
-                    ? { ...reward, Status: true }
-                    : reward
-            )
-        );
+      setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
+      setRewards(prevRewards =>
+        prevRewards.map(reward =>
+          reward.RewardName === selectedReward.RewardName
+            ? { ...reward, Status: true }
+            : reward
+        )
+      );
 
-        try {
-            const memberID = localStorage.getItem('memberID'); // ดึง member_id จาก localStorage
-
-            console.log("Retrieved memberID:", memberID); // ดูค่าที่ดึงมา
-
-            if (!memberID) {
-                messageApi.open({
-                    type: "error",
-                    content: "No memberID found.",
-                });
-                return;
-            }
-
-            // ส่งข้อมูลไปยัง backend พร้อมกับ member_id
-            await CreateReward({
-                ...selectedReward,
-                member_id: memberID,  // ส่ง member_id ไปด้วย
-                Status: true
-            });
-
-            // หากการแลกรางวัลสำเร็จ
-            messageApi.open({
-                type: "success",
-                content: 'Reward redeemed successfully!',
-            });
-            setIsPopupOpen(false);
-        } catch (error) {
-            // หากเกิดข้อผิดพลาดขณะแลกรางวัล
-            messageApi.open({
-                type: "error",
-                content: "An error occurred while redeeming the reward.",
-            });
-        }
+      try {
+        await CreateReward({
+          ...selectedReward,
+          Status: true
+        });
+        messageApi.open({
+          type: "success",
+          content: 'Reward redeemed successfully!',
+        });
+        setIsPopupOpen(false);
+      } catch (error) {
+        messageApi.open({
+          type: "error",
+          content: "An error occurred while redeeming the reward.",
+        });
+      }
     }
-};
-
+  };
 
   const goToHistory = () => {
     navigate('/history', { state: { userPoints, userName } });
