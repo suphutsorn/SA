@@ -8,6 +8,7 @@ import { RewardInterface } from "../../interfaces/IReward";
 import { MembersInterface } from '../../interfaces/IMember';
 import { message } from "antd";
 
+
 const Reward: React.FC = () => {
   const apiUrl = "http://localhost:8081/api";
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -20,61 +21,89 @@ const Reward: React.FC = () => {
 
   const getUserProfile = async () => {
     const token = localStorage.getItem("token"); // ดึง token ที่เก็บไว้ใน localStorage
-  
+
     if (!token) {
-      messageApi.open({
-        type: "error",
-        content: "No token found.",
-      });
-      return;
-    }
-  
-    const memberID = localStorage.getItem('memberID'); // ดึง memberID ที่เก็บไว้ใน localStorage
-  
-    if (!memberID) {
-      messageApi.open({
-        type: "error",
-        content: "No memberID found.",
-      });
-      return;
-    }
-  
-    try {
-      let res = await fetch(`${apiUrl}/members/${memberID}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // ส่ง token ใน headers
-        }
-      }).then((res) => {
-        if (res.status === 200) {
-          return res.json();
-        } else {
-          return { status: res.status, data: { error: "Failed to fetch user profile" } };
-        }
-      });
-  
-      if (res.status === 200) {
-        const { name, points } = res.data; // ดึงข้อมูล name และ points
-        setUserName(name.data);
-        setUserPoints(points.data);
-      } else {
         messageApi.open({
-          type: "error",
-          content: res.data.error,
+            type: "error",
+            content: "No token found.",
         });
-      }
-    } catch (error) {
-      messageApi.open({
-        type: "error",
-        content: "An error occurred.",
-      });
+        console.log("No token found.");
+        return;
     }
-  };
-  
-  useEffect(() => {
+
+    const memberID = localStorage.getItem('memberID'); // ดึง memberID ที่เก็บไว้ใน localStorage
+
+    if (!memberID) {
+        messageApi.open({
+            type: "error",
+            content: "No memberID found.",
+        });
+        console.log("No memberID found.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${apiUrl}/members/${memberID}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` // ส่ง token ใน headers
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json(); // แปลงข้อมูลข้อผิดพลาดเป็น JSON
+            console.log("Error response status:", response.status); // แสดงสถานะการตอบกลับ
+            console.log("Error response data:", errorData); // แสดงข้อมูลข้อผิดพลาด
+
+            // ตรวจสอบข้อความข้อผิดพลาด
+            const errorMessage = errorData.message ? errorData.message : 'Unknown error';
+            messageApi.open({
+                type: "error",
+                content: `Error ${response.status}: ${errorMessage}`,
+            });
+            return; // ออกจากฟังก์ชันเมื่อเกิดข้อผิดพลาด
+        }
+
+        const data = await response.json(); // แปลงข้อมูลที่ได้รับเป็น JSON
+        console.log("Response data:", data); // แสดงข้อมูลที่ได้รับจาก API
+
+        // ตรวจสอบว่า `data` มี `UserName` และ `TotalPoint` หรือไม่
+        const userName = data.UserName ? data.UserName : "Name data not available";
+        // แปลง TotalPoint เป็นตัวเลขถ้าจำเป็น
+        const points = Number(data.TotalPoint); // ใช้ Number() เพื่อแปลงค่าเป็นตัวเลข
+        // ตรวจสอบค่าของ points และให้ค่าเริ่มต้นถ้าเป็น NaN
+        const displayPoints = !isNaN(points) ? points : "Points data not available";
+
+        console.log("User Name:", userName); // แสดงค่า name
+        console.log("User Points:", displayPoints); // แสดงค่า points
+
+        // ตั้งค่าตัวแปรตามข้อมูลที่ได้รับ
+        setUserName(userName);
+        setUserPoints(displayPoints);
+
+    } catch (error) {
+        console.error("Error occurred:", error); // แสดงข้อผิดพลาดในคอนโซล
+
+        // ตรวจสอบประเภทของข้อผิดพลาด
+        let errorMessage = 'An unknown error occurred';
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+
+        messageApi.open({
+            type: "error",
+            content: errorMessage, // ใช้ข้อความข้อผิดพลาดที่ดึงมา
+        });
+    }
+};
+
+useEffect(() => {
     getUserProfile();
-  }, []);
+}, []);
+
 
   const handleImageClick = (reward: RewardInterface) => {
     setSelectedReward(reward);
@@ -88,41 +117,61 @@ const Reward: React.FC = () => {
 
   const handleConfirmReward = async () => {
     if (selectedReward) {
-      if (userPoints < selectedReward.Points!) {
-        messageApi.open({
-          type: "error",
-          content: 'You do not have enough points to redeem this reward!',
-        });
-        return;
-      }
+        // ตรวจสอบว่าผู้ใช้มีคะแนนเพียงพอในการแลกรางวัลหรือไม่
+        if (userPoints < selectedReward.Points!) {
+            messageApi.open({
+                type: "error",
+                content: 'You do not have enough points to redeem this reward!',
+            });
+            return;
+        }
 
-      setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
-      setRewards(prevRewards =>
-        prevRewards.map(reward =>
-          reward.RewardName === selectedReward.RewardName
-            ? { ...reward, Status: true }
-            : reward
-        )
-      );
+        // ลบคะแนนของผู้ใช้ใน frontend ก่อนแลกรางวัล
+        setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
+        setRewards(prevRewards =>
+            prevRewards.map(reward =>
+                reward.RewardName === selectedReward.RewardName
+                    ? { ...reward, Status: true }
+                    : reward
+            )
+        );
 
-      try {
-        await CreateReward({
-          ...selectedReward,
-          Status: true
-        });
-        messageApi.open({
-          type: "success",
-          content: 'Reward redeemed successfully!',
-        });
-        setIsPopupOpen(false);
-      } catch (error) {
-        messageApi.open({
-          type: "error",
-          content: "An error occurred while redeeming the reward.",
-        });
-      }
+        try {
+            const memberID = localStorage.getItem('memberID'); // ดึง member_id จาก localStorage
+
+            console.log("Retrieved memberID:", memberID); // ดูค่าที่ดึงมา
+
+            if (!memberID) {
+                messageApi.open({
+                    type: "error",
+                    content: "No memberID found.",
+                });
+                return;
+            }
+
+            // ส่งข้อมูลไปยัง backend พร้อมกับ member_id
+            await CreateReward({
+                ...selectedReward,
+                member_id: memberID,  // ส่ง member_id ไปด้วย
+                Status: true
+            });
+
+            // หากการแลกรางวัลสำเร็จ
+            messageApi.open({
+                type: "success",
+                content: 'Reward redeemed successfully!',
+            });
+            setIsPopupOpen(false);
+        } catch (error) {
+            // หากเกิดข้อผิดพลาดขณะแลกรางวัล
+            messageApi.open({
+                type: "error",
+                content: "An error occurred while redeeming the reward.",
+            });
+        }
     }
-  };
+};
+
 
   const goToHistory = () => {
     navigate('/history', { state: { userPoints, userName } });

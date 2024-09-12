@@ -10,7 +10,7 @@ import { RewardInterface } from '../../interfaces/IReward'; // Import Reward Int
 const HistoryPage: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { userPoints = 0, userName = 'Guest', rewardID = 1 } = location.state || {};
+    const { userPoints , userName , rewardID } = location.state || {};
 
     const [reward, setReward] = useState<RewardInterface | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -22,10 +22,11 @@ const HistoryPage: React.FC = () => {
         console.log("Using Member ID:", memberID);
     
         if (!memberID || !token) {
-          message.error('Please log in first');
-          navigate('/Login');
-          return;
+            message.error('Please log in first');
+            navigate('/Login');
+            return;
         }
+
         console.log("Reward ID:", rewardID);
 
         try {
@@ -33,14 +34,14 @@ const HistoryPage: React.FC = () => {
                 console.log("Fetching reward with ID:", rewardID);
                 const rewardData = await GetRewardById(rewardID);
                 
-                if (rewardData) {
+                if (rewardData && rewardData.data) {
                     console.log("Reward data fetched:", rewardData);
 
                     // Ensure correct data types
                     const formattedReward: RewardInterface = {
                         ...rewardData.data,
-                        Reward_time: new Date(rewardData.Reward_time), // Convert Reward_time to Date object
-                        Points: Number(rewardData.Points), // Convert Points to number
+                        Reward_time: new Date(rewardData.data.Reward_time), // Convert Reward_time to Date object
+                        Points: Number(rewardData.data.Points), // Convert Points to number
                     };
 
                     setReward(formattedReward);
@@ -59,6 +60,8 @@ const HistoryPage: React.FC = () => {
     };
 
     useEffect(() => {
+        console.log("Initial State - User Name:", userName);
+        console.log("Initial State - User Points:", userPoints);
         fetchReward();
     }, [rewardID]);
 
@@ -66,7 +69,7 @@ const HistoryPage: React.FC = () => {
         {
             key: 'Reward_time',
             title: 'Reward Time',
-            dataIndex: 'reward_time',
+            dataIndex: 'Reward_time',
             render: (text: Date) => {
                 const date = new Date(text);
                 return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
@@ -78,20 +81,19 @@ const HistoryPage: React.FC = () => {
             dataIndex: 'RewardName',
         },
         {
-            key: 'Describtion',
+            key: 'Description',
             title: 'Description',
-            dataIndex: 'Describtion',
+            dataIndex: 'Description',
         },
         {
             key: 'Points',
             title: 'Points',
-            dataIndex: 'points',
+            dataIndex: 'Points',
             render: (text: number) => text.toString(), // Convert Points to string for display
         },
     ];
 
     // Ensure that each record in dataSource has a unique ID
-    console.log(reward)
     const dataSource = reward ? [reward] : [];
 
     return (

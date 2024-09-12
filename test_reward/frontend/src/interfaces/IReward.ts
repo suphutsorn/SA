@@ -10,5 +10,7 @@ export interface RewardInterface {
     Reward_time?: Date;
     Describtion?: string;
 
+    member_id?: number;
+
     
 }

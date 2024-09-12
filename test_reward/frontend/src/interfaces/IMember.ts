@@ -8,4 +8,6 @@ export interface MembersInterface {
   GenderID?: number;
   Password?: string;
   TotalPoint: number;
+
+  
 }
