@@ -124,7 +124,7 @@ useEffect(() => {
         });
         return;
       }
-
+  
       setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
       setRewards(prevRewards =>
         prevRewards.map(reward =>
@@ -133,12 +133,33 @@ useEffect(() => {
             : reward
         )
       );
-
+  
       try {
-        await CreateReward({
+        // ดึง member_id จาก localStorage หรือแหล่งข้อมูลอื่น
+        const memberID = localStorage.getItem("memberID");
+  
+        // ตรวจสอบว่า memberID มีค่าหรือไม่
+        if (!memberID) {
+          messageApi.open({
+            type: "error",
+            content: "No member ID found.",
+          });
+          return;
+        }
+  
+        // เตรียมข้อมูลรางวัลพร้อมกับ member_id
+        const rewardData = {
           ...selectedReward,
-          Status: true
-        });
+          Status: true,
+          member_id: Number(memberID), // เพิ่ม member_id ที่ดึงมา
+        };
+  
+        // Print rewardData to the console
+        console.log("Data being sent to CreateReward:", rewardData);
+  
+        // เรียกใช้ฟังก์ชัน CreateReward และส่งข้อมูล rewardData ไปยัง backend
+        await CreateReward(rewardData);
+  
         messageApi.open({
           type: "success",
           content: 'Reward redeemed successfully!',
@@ -152,7 +173,6 @@ useEffect(() => {
       }
     }
   };
-
   const goToHistory = () => {
     navigate('/history', { state: { userPoints, userName } });
   };

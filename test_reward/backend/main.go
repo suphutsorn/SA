@@ -44,6 +44,9 @@ func main() {
 		router.POST("/members", controller.CreateMember)
 		router.PATCH("/members", controller.UpdateMember)
 		router.DELETE("/members/:id", controller.DeleteMember)
+		router.GET("/api/rewards/:member_id", controller.GetRewardsByMemberID)
+		
+
 
         
 	}

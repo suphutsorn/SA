@@ -236,6 +236,37 @@ async function GetMembers() {
   
     return res;
   }
+
+  const GetRewardsByMemberID = async (memberID: string) => {
+    try {
+        const response = await fetch(`/api/rewards/${memberID}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        console.log("Raw Response:", response);
+
+        if (!response.ok) {
+            // ถ้าไม่สำเร็จ อ่านข้อมูลจาก response.text() เพื่อดีบักข้อผิดพลาด
+            const errorText = await response.text(); 
+            console.error("Error response text:", errorText);
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        // พยายามอ่านข้อมูล response.json() เพียงครั้งเดียว
+        const data = await response.json();
+        console.log("Data:", data); // ตรวจสอบข้อมูลที่ได้รับ
+        return data;
+
+    } catch (error) {
+        console.error("Error fetching rewards:", error);
+        throw error;
+    }
+};
+
+
   
 
   
@@ -251,7 +282,8 @@ async function GetMembers() {
     DeleteMemberByID,
     GetMemberById,
     CreateMember,
-    UpdateMember
+    UpdateMember,
+    GetRewardsByMemberID 
    
 
    };

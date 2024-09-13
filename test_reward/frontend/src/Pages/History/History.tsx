@@ -1,25 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { Table, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import 'antd/dist/reset.css';
 import './History.css';
-import { GetRewardById } from '../../services/http/index'; // Import API calls
+import { GetRewardsByMemberID } from '../../services/http/index'; // Import API calls
 import { RewardInterface } from '../../interfaces/IReward'; // Import Reward Interface
 
 const HistoryPage: React.FC = () => {
-    const location = useLocation();
     const navigate = useNavigate();
-    const { userPoints , userName , rewardID } = location.state || {};
-
-    const [reward, setReward] = useState<RewardInterface | null>(null);
+    const [rewards, setRewards] = useState<RewardInterface[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const fetchReward = async () => {
+    const handleBack = () => {
+        navigate('/Reward');
+    };
+
+    const fetchRewards = async () => {
         const memberID = localStorage.getItem('memberID');
         const token = localStorage.getItem('token');
-    
-        console.log("Using Member ID:", memberID);
     
         if (!memberID || !token) {
             message.error('Please log in first');
@@ -27,43 +25,32 @@ const HistoryPage: React.FC = () => {
             return;
         }
 
-        console.log("Reward ID:", rewardID);
-
         try {
-            if (rewardID) {
-                console.log("Fetching reward with ID:", rewardID);
-                const rewardData = await GetRewardById(rewardID);
-                
-                if (rewardData && rewardData.data) {
-                    console.log("Reward data fetched:", rewardData);
+            console.log("Fetching rewards for member ID:", memberID);
+            const rewardData = await GetRewardsByMemberID(memberID);
+            
+            if (rewardData && rewardData.length > 0) {
+                const formattedRewards = rewardData.map((reward: RewardInterface) => ({
+                    ...reward,
+                    Reward_time: new Date(reward.Reward_time), // Convert Reward_time to Date object
+                    Points: Number(reward.Points), // Ensure Points is a number
+                }));
 
-                    // Ensure correct data types
-                    const formattedReward: RewardInterface = {
-                        ...rewardData.data,
-                        Reward_time: new Date(rewardData.data.Reward_time), // Convert Reward_time to Date object
-                        Points: Number(rewardData.data.Points), // Convert Points to number
-                    };
-
-                    setReward(formattedReward);
-                } else {
-                    throw new Error("Failed to fetch reward data");
-                }
+                setRewards(formattedRewards);
             } else {
-                message.error('Reward ID is not provided.');
+                message.info('No rewards found for this member.');
             }
         } catch (error) {
-            message.error('Failed to load reward. Please try again.');
-            console.error("Error fetching reward:", error);
+            message.error('Failed to load rewards. Please try again.');
+            console.error("Error fetching rewards:", error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        console.log("Initial State - User Name:", userName);
-        console.log("Initial State - User Points:", userPoints);
-        fetchReward();
-    }, [rewardID]);
+        fetchRewards();
+    }, []);
 
     const columns = [
         {
@@ -93,29 +80,28 @@ const HistoryPage: React.FC = () => {
         },
     ];
 
-    // Ensure that each record in dataSource has a unique ID
-    const dataSource = reward ? [reward] : [];
-
     return (
         <div className="wrapper">
             <div className="page-title">
                 My History
-                <Link to="/Reward" className="back-button">
+                <button onClick={handleBack} className="back-button">
                     BACK
-                </Link>
+                </button> {/* ปิดแท็ก <button> ถูกต้องแล้ว */}
             </div>
             <div className="profile-container">
                 <div className="profile-picture">
                     <img src="account_circle.png" alt="Profile Icon" />
                 </div>
-                <div className="profile-name">{userName}</div>
+                <div className="profile-name">
+                    {localStorage.getItem('userName') || 'Guest'}
+                </div> {/* ตรวจสอบค่า null */}
                 <div className="reward-icon">
-                    {userPoints} Points
-                </div>
+                    {localStorage.getItem('userPoints') || 0} Points
+                </div> {/* ตรวจสอบค่า null */}
             </div>
             <div className="history-list">
                 <Table
-                    dataSource={dataSource}
+                    dataSource={rewards}
                     columns={columns}
                     pagination={{ pageSize: 5 }}
                     rowClassName={(record, index) => (index % 2 === 0 ? 'even-row' : 'odd-row')}
