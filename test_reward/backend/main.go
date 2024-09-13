@@ -8,7 +8,7 @@ import (
 	
 )
 
-const PORT = "8081"
+const PORT = "8000"
 
 func main() {
 
@@ -42,9 +42,9 @@ func main() {
 		router.GET("/members", controller.ListMembers)
 		router.GET("/members/:id", controller.GetMember)
 		router.POST("/members", controller.CreateMember)
-		router.PATCH("/members", controller.UpdateMember)
+		router.PATCH("/members/:id", controller.UpdateMember)
 		router.DELETE("/members/:id", controller.DeleteMember)
-		router.GET("/api/rewards/:member_id", controller.GetRewardsByMemberID)
+		router.GET("/mrewards/:member_id", controller.GetRewardsByMemberID)
 		
 
 

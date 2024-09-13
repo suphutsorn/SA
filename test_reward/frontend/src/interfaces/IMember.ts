@@ -1,5 +1,6 @@
 export interface MembersInterface {
   ID?: number;
+  Username?: string;
   FirstName?: string;
   LastName?: string;
   Email?: string;

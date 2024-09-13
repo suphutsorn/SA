@@ -10,7 +10,7 @@ import { message } from "antd";
 
 
 const Reward: React.FC = () => {
-  const apiUrl = "http://localhost:8081/api";
+  const apiUrl = "http://localhost:8000/api";
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedReward, setSelectedReward] = useState<RewardInterface | null>(null);
   const [userName, setUserName] = useState<string>('');

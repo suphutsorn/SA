@@ -3,13 +3,16 @@ import { Table, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import 'antd/dist/reset.css';
 import './History.css';
-import { GetRewardsByMemberID } from '../../services/http/index'; // Import API calls
+import { GetRewardsByMemberID, GetMemberById } from '../../services/http/index'; // Import API calls
 import { RewardInterface } from '../../interfaces/IReward'; // Import Reward Interface
+import { MembersInterface } from '../../interfaces/IMember'; // Import Member Interface
 
 const HistoryPage: React.FC = () => {
     const navigate = useNavigate();
     const [rewards, setRewards] = useState<RewardInterface[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [totalPoints, setTotalPoints] = useState<number | null>(null); // State for storing total points
+    const [userName, setUserName] = useState<string | null>(null); // State for storing username
 
     const handleBack = () => {
         navigate('/Reward');
@@ -18,7 +21,11 @@ const HistoryPage: React.FC = () => {
     const fetchRewards = async () => {
         const memberID = localStorage.getItem('memberID');
         const token = localStorage.getItem('token');
-    
+
+        // Print memberID and token before sending the request
+        console.log("Member ID from localStorage:", memberID);
+        console.log("Token from localStorage:", token);
+
         if (!memberID || !token) {
             message.error('Please log in first');
             navigate('/Login');
@@ -26,9 +33,24 @@ const HistoryPage: React.FC = () => {
         }
 
         try {
+            // Fetch member details and total points
+            console.log("Fetching member details for member ID:", memberID);
+            const memberData: MembersInterface = await GetMemberById(memberID);
+
+            if (memberData) {
+                setTotalPoints(memberData.TotalPoint); // Store total points in state
+                setUserName(memberData.UserName); // Store username in state
+            } else {
+                setTotalPoints(0); // Default value if no points
+                setUserName('Guest');
+            }
+
             console.log("Fetching rewards for member ID:", memberID);
             const rewardData = await GetRewardsByMemberID(memberID);
-            
+
+            // Print the data received from GetRewardsByMemberID
+            console.log("Reward data received:", rewardData);
+
             if (rewardData && rewardData.length > 0) {
                 const formattedRewards = rewardData.map((reward: RewardInterface) => ({
                     ...reward,
@@ -54,9 +76,9 @@ const HistoryPage: React.FC = () => {
 
     const columns = [
         {
-            key: 'Reward_time',
+            key: 'reward_time',
             title: 'Reward Time',
-            dataIndex: 'Reward_time',
+            dataIndex: 'reward_time',
             render: (text: Date) => {
                 const date = new Date(text);
                 return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
@@ -68,14 +90,14 @@ const HistoryPage: React.FC = () => {
             dataIndex: 'RewardName',
         },
         {
-            key: 'Description',
+            key: 'Describtion',
             title: 'Description',
-            dataIndex: 'Description',
+            dataIndex: 'Describtion',
         },
         {
-            key: 'Points',
+            key: 'points',
             title: 'Points',
-            dataIndex: 'Points',
+            dataIndex: 'points',
             render: (text: number) => text.toString(), // Convert Points to string for display
         },
     ];
@@ -86,18 +108,18 @@ const HistoryPage: React.FC = () => {
                 My History
                 <button onClick={handleBack} className="back-button">
                     BACK
-                </button> {/* ปิดแท็ก <button> ถูกต้องแล้ว */}
+                </button>
             </div>
             <div className="profile-container">
                 <div className="profile-picture">
                     <img src="account_circle.png" alt="Profile Icon" />
                 </div>
                 <div className="profile-name">
-                    {localStorage.getItem('userName') || 'Guest'}
-                </div> {/* ตรวจสอบค่า null */}
+                    {userName || 'Guest'} {/* แสดงชื่อผู้ใช้ที่ได้รับจาก API */}
+                </div>
                 <div className="reward-icon">
-                    {localStorage.getItem('userPoints') || 0} Points
-                </div> {/* ตรวจสอบค่า null */}
+                    {totalPoints !== null ? `${totalPoints} Points` : 'Loading...'} {/* แสดง TotalPoint */}
+                </div>
             </div>
             <div className="history-list">
                 <Table

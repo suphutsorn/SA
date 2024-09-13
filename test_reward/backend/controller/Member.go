@@ -128,30 +128,42 @@ func DeleteMember(c *gin.Context) {
 
 // PATCH /members/:id
 func UpdateMember(c *gin.Context) {
-	var member entity.Member
+    var member entity.Member
 
-	MemberID := c.Param("id")
+    // ดึงค่า MemberID จาก URL parameter
+    MemberID := c.Param("id")
 
-	db := config.DB()
-	result := db.First(&member, MemberID)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "id not found"})
-		return
-	}
+    // ตรวจสอบว่ามีสมาชิกที่มี ID นี้อยู่ในระบบหรือไม่
+    db := config.DB()
+    result := db.First(&member, MemberID)
+    if result.Error != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Member ID not found"})
+        return
+    }
 
-	if err := c.ShouldBindJSON(&member); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request, unable to map payload"})
-		return
-	}
+    // อ่านข้อมูลจาก JSON และอัปเดตเฉพาะฟิลด์ที่จำเป็น
+    var input struct {
+        TotalPoint int `json:"TotalPoint"`
+    }
 
-	result = db.Save(&member)
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
-		return
-	}
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request, unable to map payload"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{"message": "Updated successful"})
+    // ใช้ db.Model() เพื่ออัปเดตเฉพาะฟิลด์ TotalPoint
+    result = db.Model(&member).Updates(map[string]interface{}{
+        "TotalPoint": input.TotalPoint,
+    })
+    
+    if result.Error != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to update member"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Update successful"})
 }
+
 
 func GetRewardsByMemberID(c *gin.Context) {
     memberID := c.Param("member_id")

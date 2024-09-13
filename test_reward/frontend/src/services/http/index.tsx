@@ -6,7 +6,7 @@ import { RewardInterface  } from "../../interfaces/IReward";
 
 
 
-const apiUrl = "http://localhost:8081/api";
+const apiUrl = "http://localhost:8000/api";
 
 // ฟังก์ชันเพื่อดึงข้อมูลรางวัลทั้งหมด
 async function GetReward() {
@@ -239,7 +239,7 @@ async function GetMembers() {
 
   const GetRewardsByMemberID = async (memberID: string) => {
     try {
-        const response = await fetch(`/api/rewards/${memberID}`, {
+        const response = await fetch(`${apiUrl}/mrewards/${memberID}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
