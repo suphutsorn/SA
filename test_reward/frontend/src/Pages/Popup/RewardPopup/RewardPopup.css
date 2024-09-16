@@ -33,14 +33,14 @@ body.popup-open {
 .reward-icon img {
     width: 80px;
     height: 80px;
-    margin-bottom: 20px !important;
+    margin-bottom: 10px !important;
 }
 
 .reward-points {
     font-size: 20px;
     font-weight: bold;
     color: #333;
-    margin-bottom: 40px !important;
+    margin-bottom: 20px !important;
 }
 
 .reward-image {
@@ -48,8 +48,8 @@ body.popup-open {
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin-top: 35px !important; 
-    margin-bottom: 30px !important; 
+    margin-top: 15px !important; 
+    margin-bottom: 10px !important; 
 }
 
 .reward-image img {
@@ -61,8 +61,7 @@ body.popup-open {
 .reward-description {
     font-size: 16px;
     color: #333;
-    margin-top: 30px;
-    margin-bottom: 20px !important;
+    margin-bottom: 10px !important;
 }
 
 .button {

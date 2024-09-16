@@ -55,8 +55,10 @@
 .profile-image {
     width: 100px;
     height: 100px;
-    border-radius: 50%; 
-}
+    border-radius: 50%;
+    margin-bottom: 20px; /* เพิ่มระยะห่างจากตัวอักษรข้างล่าง */
+} 
+
 
 .my-reward-button {
     background-color: #D9534F; /* สีพื้นหลังของปุ่ม */
@@ -90,15 +92,17 @@
 .points-icon {
     width: 70px;
     height: 60px;
-    margin-bottom: -10px;
+    margin-bottom: 10px; /* เพิ่มระยะห่างจากองค์ประกอบข้างล่าง */
 }
 
-.balance {
-    font-size: 16px;
+
+.balance h2 {
+    font-size: 20px;
     font-weight: bold;
     margin: 0;
-    margin-bottom: -10px; /* ลด margin-bottom เพื่อดันคะแนนขึ้น */
+    margin-bottom: 10px; /* เพิ่มระยะห่างจากด้านล่าง */
 }
+
 
 .points-section p {
     margin: 2px 0;
@@ -493,19 +497,19 @@ body {
 }
 
 .popcorn-box-12 {
-    top: 3590px;
+    top: 3665px;
     width: 250px; /* ปรับขนาดตามที่ต้องการ */
-    left: 53%;
+    left: 50%;
 }
 
 .popcorn-box-13 {
-    top: 4040px;
-    width: 370px; /* ปรับขนาดตามที่ต้องการ */
+    top: 3980px;
+    width: 200px; /* ปรับขนาดตามที่ต้องการ */
 }
 
 .popcorn-box-14 {
-    top: 4290px;
-    width: 390px; /* ปรับขนาดตามที่ต้องการ */
+    top: 4350px;
+    width: 360px; /* ปรับขนาดตามที่ต้องการ */
 }
 
 .popcorn-box-15 {
@@ -519,13 +523,14 @@ body {
 }
 
 .popcorn-box-17 {
-    top: 5340px;
-    width: 300px; /* ปรับขนาดตามที่ต้องการ */
+    top: 5347px;
+    width: 250px; /* ปรับขนาดตามที่ต้องการ */
 }
 
 .popcorn-box-18 {
-    top: 5710px;
-    width: 350px; /* ปรับขนาดตามที่ต้องการ */
+    top: 5700px;
+    left: 53%;
+    width: 150px; /* ปรับขนาดตามที่ต้องการ */
 }
 
 
@@ -620,7 +625,7 @@ body {
 }
 
 .popcorn-label-18 {
-    top: 5925px;
+    top: 5937px;
     left: 51.9%;
     
 }
@@ -753,27 +758,6 @@ body {
     height: auto; /* ให้ความสูงปรับตามอัตราส่วน */
     right:370px;
 }
-/* คลาสพิเศษสำหรับกล่องที่แสดงข้อความ "Changed" */
-.changed-label {
-    font-family: 'Fjalla One', sans-serif; /* กำหนดฟอนต์ Fjalla One */
-    font-weight: bold; /* ตั้งค่าให้เป็นตัวหนา */
-    position: absolute;
-    width: 200px;
-    text-align: center;
-    font-size: 15px;
-    background-color: rgb(221, 37, 37);
-    color: black;
-    border-radius: 10px;
-    padding: 10px;
-    z-index: 2; /* นำมาอยู่ข้างหน้า center-image */
-    left: 51%; /* จัดให้อยู่ตรงกลางแนวนอน */
-    transform: translateX(-50%); /* เลื่อนกึ่งกลางของกล่องไปตรงกลางหน้าจอ */
-}
-
-.changed-label-18 {
-    top: 5710px;
-    width: 350px; /* ปรับขนาดตามที่ต้องการ */
-}
 
 
 
@@ -800,7 +784,7 @@ body {
   }
   
   .popup-content-coin h2 {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
   }
   
   .popup-content-coin button {

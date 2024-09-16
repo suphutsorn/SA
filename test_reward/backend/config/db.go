@@ -29,6 +29,7 @@ func SetupDatabase() {
 		&entity.Gender{},
 		&entity.Member{},
 		&entity.Reward{},
+		&entity.CodeReward{},
 		
 	)
 

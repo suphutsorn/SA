@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message } from 'antd';
+import { Table, message, Modal, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import 'antd/dist/reset.css';
 import './History.css';
-import { GetRewardsByMemberID, GetMemberById } from '../../services/http/index'; // Import API calls
+import { GetRewardsByMemberID, GetMemberById, saveCodeReward, checkExistingCodeReward } from '../../services/http/index'; // Import API calls
 import { RewardInterface } from '../../interfaces/IReward'; // Import Reward Interface
 import { MembersInterface } from '../../interfaces/IMember'; // Import Member Interface
 
@@ -13,18 +13,61 @@ const HistoryPage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [totalPoints, setTotalPoints] = useState<number | null>(null); // State for storing total points
     const [userName, setUserName] = useState<string | null>(null); // State for storing username
+    const [memberId, setMemberId] = useState<string | null>(null); // State for storing member ID
+    const [isModalVisible, setIsModalVisible] = useState<boolean>(false); // State for controlling Modal visibility
+    const [selectedReward, setSelectedReward] = useState<RewardInterface | null>(null); // State for storing selected reward
+
+    const handleView = async (reward: RewardInterface) => {
+        // ตรวจสอบว่า type เป็น Discount หรือ Ticket หรือไม่
+        if (reward.type === 'discount' || reward.type === 'ticket') {
+            message.info(`Rewards of type ${reward.type} cannot be viewed in the popup.`);
+            return; // ไม่ต้องแสดง Popup หากเป็นประเภท Discount หรือ Ticket
+        }
+    
+        try {
+            // ตรวจสอบว่ามีโค้ดอยู่แล้วหรือไม่
+            const existingCode = await checkExistingCodeReward(reward.ID);
+    
+            if (existingCode && existingCode.reward_code) {
+                // ถ้ามีโค้ดอยู่แล้ว ให้ใช้โค้ดนั้น
+                reward.code = existingCode.reward_code;
+            } else {
+                // ถ้าไม่มีโค้ด ให้สร้างโค้ดใหม่
+                const generatedCode = generateCode(reward);  // สร้างโค้ดแบบสุ่ม
+                const savedCode = await saveCodeReward(generatedCode, reward.ID, memberId);  // ส่ง POST เพื่อบันทึกโค้ดลงในฐานข้อมูล
+                reward.code = savedCode.reward_code;  // ใช้โค้ดใหม่ที่สร้างขึ้นและบันทึก
+            }
+    
+            // ตั้งค่า reward ที่ถูกเลือกและแสดง modal
+            setSelectedReward({ ...reward });
+            setIsModalVisible(true); // แสดง modal เมื่อข้อมูลพร้อมแล้ว
+        } catch (error) {
+            console.error('Error fetching or generating reward code:', error);
+            message.error('Failed to load or generate reward code');
+        }
+    };
+    
 
     const handleBack = () => {
         navigate('/Reward');
     };
 
+    const generateCode = (reward: RewardInterface) => {
+        console.log('Generating new code for Reward ID:', reward.ID);
+
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 8; i++) {
+            code += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+
+        console.log('Generated Code:', code); // แสดงโค้ดที่ถูกสร้างใหม่
+        return code;
+    };
+
     const fetchRewards = async () => {
         const memberID = localStorage.getItem('memberID');
         const token = localStorage.getItem('token');
-
-        // Print memberID and token before sending the request
-        console.log("Member ID from localStorage:", memberID);
-        console.log("Token from localStorage:", token);
 
         if (!memberID || !token) {
             message.error('Please log in first');
@@ -34,22 +77,19 @@ const HistoryPage: React.FC = () => {
 
         try {
             // Fetch member details and total points
-            console.log("Fetching member details for member ID:", memberID);
             const memberData: MembersInterface = await GetMemberById(memberID);
 
             if (memberData) {
                 setTotalPoints(memberData.TotalPoint); // Store total points in state
                 setUserName(memberData.UserName); // Store username in state
+                setMemberId(memberID); // Store member ID in state
             } else {
                 setTotalPoints(0); // Default value if no points
                 setUserName('Guest');
+                setMemberId(null); // Clear member ID if no data
             }
 
-            console.log("Fetching rewards for member ID:", memberID);
             const rewardData = await GetRewardsByMemberID(memberID);
-
-            // Print the data received from GetRewardsByMemberID
-            console.log("Reward data received:", rewardData);
 
             if (rewardData && rewardData.length > 0) {
                 const formattedRewards = rewardData.map((reward: RewardInterface) => ({
@@ -73,6 +113,11 @@ const HistoryPage: React.FC = () => {
     useEffect(() => {
         fetchRewards();
     }, []);
+
+    const handleCancel = () => {
+        setIsModalVisible(false); // Close the modal
+        setSelectedReward(null); // Clear the selected reward
+    };
 
     const columns = [
         {
@@ -100,6 +145,23 @@ const HistoryPage: React.FC = () => {
             dataIndex: 'points',
             render: (text: number) => text.toString(), // Convert Points to string for display
         },
+        {
+            key: 'action',
+            title: 'Action',
+            render: (record: RewardInterface) => (
+                <div style={{ textAlign: 'center' }}>
+                    {/* ตรวจสอบ type หากไม่ใช่ Ticket หรือ Discount จึงแสดงปุ่มดู */}
+                    {record.type && !['ticket', 'discount'].includes(record.type.toLowerCase()) && (
+                        <Button
+                            type="primary"
+                            onClick={() => handleView(record)} // เมื่อคลิกจะเรียกฟังก์ชัน handleView
+                        >
+                            ดู
+                        </Button>
+                    )}
+                </div>
+            ),
+        },
     ];
 
     return (
@@ -125,12 +187,38 @@ const HistoryPage: React.FC = () => {
                 <Table
                     dataSource={rewards}
                     columns={columns}
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 10 }}
                     rowClassName={(record, index) => (index % 2 === 0 ? 'even-row' : 'odd-row')}
                     rowKey="ID" // Ensure this key is unique
                     loading={loading}
                 />
             </div>
+
+            {/* Modal for viewing reward details */}
+            <Modal
+                key={selectedReward ? selectedReward.ID : 'modal'}
+                title="Reward Details"
+                visible={isModalVisible}
+                onCancel={handleCancel}
+                footer={[
+                    <Button key="close" onClick={handleCancel}>
+                        Close
+                    </Button>,
+                ]}
+            >
+                {selectedReward && (
+                <div>
+                    <h2>{selectedReward.RewardName}</h2>
+                    <p>{selectedReward.Describtion}</p>
+                    <p>Points: {selectedReward.Points}</p>
+
+                    {/* แสดงโค้ดแลกเปลี่ยน */}
+                    <p>
+                        <strong>Reward Code:</strong> {selectedReward.code}
+                    </p>
+                </div>
+                )}
+            </Modal>
         </div>
     );
 };

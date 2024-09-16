@@ -6,6 +6,7 @@ import Discount from './Pages/My_reward/Discount';
 import Ticket from './Pages/My_reward/Ticket';
 import Rewardd from './Pages/My_reward/Reward';
 import Login from './Pages/Login/login';
+import CheckCodePage from './Pages/CheckCodePage/CheckCodePage';
 
 const AppRoutes: React.FC = () => (
   <Routes>
@@ -16,6 +17,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/My reward" element={<Discount />} />
     <Route path="/ticket" element={<Ticket />} />
     <Route path="/Rewardd" element={<Rewardd />} />
+    <Route path="/checkcode" element={<CheckCodePage />} />
     
   </Routes>
 );

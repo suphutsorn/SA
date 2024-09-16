@@ -1,12 +1,14 @@
 import { MembersInterface } from "../../interfaces/IMember";
 import { RewardInterface  } from "../../interfaces/IReward"; 
+import { CoderewardInterface  } from "../../interfaces/ICodereward"; 
 
 
 
 
 
 
-const apiUrl = "http://localhost:8000/api";
+
+const apiUrl = "http://localhost:8001/api";
 
 // ฟังก์ชันเพื่อดึงข้อมูลรางวัลทั้งหมด
 async function GetReward() {
@@ -180,26 +182,37 @@ async function GetMembers() {
   
     return res;
   }
+
+  
   
   // ฟังก์ชันเพื่ออัปเดตข้อมูลสมาชิก
-  async function UpdateMember(data: MembersInterface) {
-    const requestOptions = {
+async function UpdateMember(data: MembersInterface) {
+  const requestOptions = {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    };
-  
-    let res = await fetch(`${apiUrl}/members/${data.ID}`, requestOptions)
-      .then((res) => {
-        if (res.status === 200) {
-          return res.json();
-        } else {
+  };
+
+  try {
+      // เรียก API เพื่ออัปเดตข้อมูลสมาชิก
+      let res = await fetch(`${apiUrl}/members/${data.ID}`, requestOptions);
+
+      // ตรวจสอบสถานะการตอบกลับ
+      if (res.status === 200) {
+          // ถ้าสถานะเป็น 200 ให้แปลงผลลัพธ์เป็น JSON
+          return await res.json();
+      } else {
+          // ถ้าสถานะไม่ใช่ 200 ให้ส่งค่ากลับเป็น false
+          console.error(`Error: ${res.status}`);
           return false;
-        }
-      });
-  
-    return res;
+      }
+  } catch (error) {
+      // จัดการข้อผิดพลาดเมื่อ fetch ไม่สำเร็จ
+      console.error("Failed to update member:", error);
+      return false;
   }
+}
+
 
 
 
@@ -267,9 +280,89 @@ async function GetMembers() {
 };
 
 
-  
+// ฟังก์ชันสำหรับบันทึกโค้ด (POST)
+const saveCodeReward = async (code: string, rewardId: number, memberId: string | null) => {
+  try {
+      const response = await fetch(`${apiUrl}/codereward`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              reward_code: code,
+              reward_id: rewardId,
+              member_id: memberId
+          }),
+      });
 
-  
+      if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Error saving code:", errorText);
+          throw new Error('Failed to save code');
+      }
+
+      const data = await response.json();
+      return data; // คืนค่าผลลัพธ์ที่บันทึกลงฐานข้อมูล
+  } catch (error) {
+      console.error('Error saving code reward:', error);
+      throw error;
+  }
+};
+
+
+
+// ฟังก์ชันสำหรับตรวจสอบโค้ดรางวัล
+const CheckCodeReward = async (code: string) => {
+    try {
+        const response = await fetch(`${apiUrl}/codereward?code=${code}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error response from server:", errorText); // แสดงข้อผิดพลาดจากเซิร์ฟเวอร์
+            throw new Error('Failed to check code reward');
+        }
+
+        const data = await response.json();
+        console.log("Response data from server:", data); // แสดงข้อมูลการตอบกลับจากเซิร์ฟเวอร์
+        return data;
+    } catch (error) {
+        console.error("Error checking code reward:", error); // แสดง error หากไม่สามารถตรวจสอบโค้ดได้
+        throw error;
+    }
+};
+
+// ฟังก์ชันสำหรับตรวจสอบโค้ดแลกเปลี่ยน (GET)
+const checkExistingCodeReward = async (rewardId: number) => {
+  try {
+      const response = await fetch(`${apiUrl}/check-code-reward?reward_id=${rewardId}`, {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+      });
+
+      if (!response.ok) {
+          if (response.status === 404) {
+              console.warn("Code reward not found for reward_id:", rewardId);
+              return null; // ถ้าไม่พบโค้ด ให้คืนค่า null
+          }
+          const errorText = await response.text();
+          console.error("Error checking code:", errorText);
+          throw new Error('Failed to check code reward');
+      }
+
+      const data = await response.json();
+      return data;  // คืนค่าโค้ดที่มีอยู่ถ้ามี
+  } catch (error) {
+      console.error('Error checking existing code reward:', error);
+      throw error;
+  }
+};
   
 
   export { 
@@ -283,7 +376,11 @@ async function GetMembers() {
     GetMemberById,
     CreateMember,
     UpdateMember,
-    GetRewardsByMemberID 
+    GetRewardsByMemberID,
+    saveCodeReward,
+    CheckCodeReward,
+    checkExistingCodeReward 
+    
    
 
    };

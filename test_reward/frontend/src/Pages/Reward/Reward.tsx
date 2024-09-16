@@ -3,14 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Reward.css';
 import RewardPopup from '../Popup/RewardPopup/RewardPopup';
-import { CreateReward, GetMembers } from '../../services/http/index'; 
+import { CreateReward, GetMembers,UpdateMember } from '../../services/http/index'; 
 import { RewardInterface } from "../../interfaces/IReward";
 import { MembersInterface } from '../../interfaces/IMember';
 import { message } from "antd";
 
 
 const Reward: React.FC = () => {
-  const apiUrl = "http://localhost:8000/api";
+  const apiUrl = "http://localhost:8001/api";
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedReward, setSelectedReward] = useState<RewardInterface | null>(null);
   const [userName, setUserName] = useState<string>('');
@@ -105,10 +105,40 @@ useEffect(() => {
 }, []);
 
 
-  const handleImageClick = (reward: RewardInterface) => {
-    setSelectedReward(reward);
-    setIsPopupOpen(true);
-  };
+  // ฟังก์ชันตรวจสอบวันหมดอายุ
+const isRewardExpired = (reward: RewardInterface) => {
+  const currentDate = new Date();
+  return reward.ExpirationDate && new Date(reward.ExpirationDate) < currentDate;
+};
+
+// ฟังก์ชันจัดการคลิกที่รูปภาพ
+const handleImageClick = (reward: RewardInterface) => {
+  // ตรวจสอบว่ารางวัลหมดอายุหรือไม่
+  if (isRewardExpired(reward)) {
+    messageApi.open({
+      type: "error",
+      content: "This reward has expired and cannot be redeemed.",
+    });
+    return; // ถ้ารางวัลหมดอายุ หยุดการทำงานของฟังก์ชัน
+  }
+  // ถ้ารางวัลไม่หมดอายุ ให้เปิด Popup
+  setSelectedReward(reward);
+  setIsPopupOpen(true);
+};
+
+const getRewardImage = (reward: RewardInterface) => {
+  const expiredImageUrl = "discountnew.png";
+  console.log("Reward Name:", reward.RewardName);
+  console.log("Reward Expiration Date:", reward.ExpirationDate);
+  console.log("Is Reward Expired?", isRewardExpired(reward));
+
+  if (isRewardExpired(reward)) {
+    return expiredImageUrl; // ถ้ารางวัลหมดอายุ
+  }
+  return reward.imageUrl; // ถ้ารางวัลยังไม่หมดอายุ
+};
+
+
 
   const handleClosePopup = () => {
     setIsPopupOpen(false);
@@ -117,6 +147,17 @@ useEffect(() => {
 
   const handleConfirmReward = async () => {
     if (selectedReward) {
+      // ตรวจสอบว่ารางวัลหมดอายุหรือไม่
+      const currentDate = new Date();
+      if (selectedReward.ExpirationDate && new Date(selectedReward.ExpirationDate) < currentDate) {
+        messageApi.open({
+          type: "error",
+          content: "This reward has expired and cannot be redeemed.",
+        });
+        return;
+      }
+  
+      // ตรวจสอบว่าผู้ใช้มีคะแนนเพียงพอหรือไม่
       if (userPoints < selectedReward.Points!) {
         messageApi.open({
           type: "error",
@@ -125,7 +166,9 @@ useEffect(() => {
         return;
       }
   
-      setUserPoints(prevPoints => prevPoints - selectedReward.Points!);
+      // ลดคะแนนของผู้ใช้หลังจากแลกของรางวัล
+      const updatedPoints = userPoints - selectedReward.Points!;
+      setUserPoints(updatedPoints);
       setRewards(prevRewards =>
         prevRewards.map(reward =>
           reward.RewardName === selectedReward.RewardName
@@ -160,10 +203,22 @@ useEffect(() => {
         // เรียกใช้ฟังก์ชัน CreateReward และส่งข้อมูล rewardData ไปยัง backend
         await CreateReward(rewardData);
   
+        // เตรียมข้อมูลสำหรับอัปเดตคะแนน
+        const memberData = {
+          ID: Number(memberID),
+          TotalPoint: updatedPoints,
+        };
+  
+        // อัปเดตคะแนนสมาชิกในตาราง Member
+        await UpdateMember(memberData);
+  
         messageApi.open({
-          type: "success",
-          content: 'Reward redeemed successfully!',
+          type: "success", // ประเภทของ popup เช่น "success", "error", "info", "warning"
+          content: 'Reward redeemed successfully and points updated!', // ข้อความที่ต้องการแสดง
+          duration: 5, // ระยะเวลาที่ popup จะแสดงผล (เป็นวินาที)
+          onClose: () => console.log('Popup closed!') // ฟังก์ชันที่จะทำงานเมื่อ popup ปิด
         });
+  
         setIsPopupOpen(false);
       } catch (error) {
         messageApi.open({
@@ -173,17 +228,12 @@ useEffect(() => {
       }
     }
   };
+  
+  
   const goToHistory = () => {
     navigate('/history', { state: { userPoints, userName } });
   };
-
   
-    
-    
-   
-  
-
-  //
   const [rewards, setRewards] = useState<RewardInterface[]>([
     {
       ID:1,
@@ -192,82 +242,103 @@ useEffect(() => {
       Points: 2,
       Status: false, 
       Discount: 0,
-      Reward: " BOX POPCORN M" ,
-      Ticket: "-",
+      Rewardcode: "operconbo" ,
       Reward_time: new Date() ,
       Describtion:"1 BOX POPCORN M น่ากินสุดๆๆเลย",
+      Type:"reward",
+      ExpirationDate:new Date('2024-09-09'),
+      
+      
     },
     {
       ID:2,
-      imageUrl: "combo m + discount.png",
-      RewardName: "1 COMBO SET M + DISCOUNT",
+      imageUrl: "discountnew.png",
+      RewardName: "DISCOUNT",
       Points: 4,
       Status: false, 
       Discount: 50,
-      Reward: " COMBO SET M" ,
-      Ticket: "-",
+      Rewardcode: "opern" ,
       Reward_time: new Date()  ,
       Describtion:"น่ากินสุดๆๆเลย",
+      Type:"discount",
+      ExpirationDate:new Date('2024-10-03'),
+      
+      
     },
     {
       ID: 3,
-      imageUrl: "combo Lticket.png",
-      RewardName: "1 COMBO SET L + TICKET",
+      imageUrl: "combosetmnew.png",
+      RewardName: "1 COMBO SET L ",
       Points: 6,
       Status: false, 
       Discount: 0,
-      Reward: " COMBO SET L " ,
-      Ticket: "TICKET",
+      Rewardcode: "Opernggggggg" ,
       Reward_time:new Date() ,
-      Describtion:"",
+      Describtion:"reward",
+      Type:"reward",
+      ExpirationDate:new Date('2024-10-17'),
+      
     },
     {
       ID: 4,
-      imageUrl: "supersizesetA.PNG",
+      imageUrl: "discountnew.png",
       RewardName: "1 SUPERSIZE SET A",
       Points: 9,
       Status: false,
-      Discount: 0,
-      Reward: " SUPERSIZE SET A" ,
-      Ticket: "-",
+      Discount: 100,
+      Rewardcode: " SUPERSIZE SET A" ,
       Reward_time:new Date(), 
       Describtion:"น่ากินสุดๆๆเลย",
+      Type:"discount",
+      ExpirationDate:new Date('2024-10-06'),
     },
     {
       ID: 5,
-      imageUrl: "gift.PNG",
-      RewardName: "GIFT",
+      imageUrl: "supersizesetA.PNG",
+      RewardName: "SUPERSIZE SET A",
       Points: 12,
       Status: false, 
       Discount: 0,
-      Reward: "GIFT" ,
-      Ticket: "-",
+      Rewardcode: "SUPERSIZE SET A" ,
+      
       Reward_time:new Date() ,
       Describtion:"น่ากินสุดๆๆเลย",
+      Type:"reward",
+     
+      
+      ExpirationDate:new Date('2024-10-29'),
+      
     },
     {
       ID: 6,
-      imageUrl: "supersizesetB.png",
-      RewardName: "SUPERSIZE SET B + DISCOUNT ",
+      imageUrl: "freeticket.png",
+      RewardName: "TICKETZILLA",
       Points: 15,
       Status: false,
       Discount: 50,
-      Reward: "SUPERSIZE SET B " ,
-      Ticket: "-",
+      Rewardcode: "TICKETZILLA" ,
+      
       Reward_time:new Date(), 
       Describtion:"น่ากินสุดๆๆเลย",
+      Type:"ticket",
+     
+      
+      ExpirationDate:new Date('2024-10-25'),
+      
     },
     {
       ID: 7,
-      imageUrl: "super c ticket.png",
-      RewardName: "SUPERSIZE SET C + TICKET",
+      imageUrl: "supersizesetc.png",
+      RewardName: "SUPERSIZE SET C",
       Points: 18,
       Status: false, 
       Discount: 0,
-      Reward: "SUPERSIZE SET C" ,
-      Ticket: "TICKET",
+      Rewardcode: "SUPERSIZE SET C" ,
       Reward_time:new Date() ,
       Describtion:"",
+      Type:"reward",
+      
+      ExpirationDate:new Date('2024-10-08'),
     },
     {
       ID: 8,
@@ -276,10 +347,15 @@ useEffect(() => {
       Points: 21,
       Status: false,
       Discount: 0,
-      Reward: "GIFT" ,
-      Ticket: "-",
+      Rewardcode: "GIFT" ,
+      
       Reward_time:new Date(), 
       Describtion:"",
+      Type:"reward",
+      
+      
+      ExpirationDate:new Date('2024-10-07'),
+      
     },
     {
       ID: 9,
@@ -288,22 +364,30 @@ useEffect(() => {
       Points: 26,
       Status: false,
       Discount: 0,
-      Reward: "1 BOX POPCORN M" ,
-      Ticket: "-",
+      Rewardcode: "2 NORMAL SEATS" ,
+      
       Reward_time:new Date() , 
       Describtion:"",
+      Type:"ticket",
+      
+      
+      ExpirationDate:new Date('2024-10-09'),
     },
     {
       ID: 10,
-      imageUrl: "2 supersize discount.png",
-      RewardName: "2 SUPERSIZE SET A + DISCOUNT",
+      imageUrl: "2superseta.png",
+      RewardName: "2 SUPERSIZE SET A ",
       Points: 32,
       Status: false,
       Discount: 100,
-      Reward: "SUPERSIZE SET A" ,
-      Ticket: "-",
+      Rewardcode: "SUPERSIZE SET A" ,
+      
       Reward_time:new Date() , 
       Describtion:"",
+      Type:"reward",
+      
+      
+      ExpirationDate:new Date('2024-11-02'),
     },
     {
       ID: 11,
@@ -312,46 +396,62 @@ useEffect(() => {
       Points: 38,
       Status: false,
       Discount: 0,
-      Reward: " PERMUIM SEATS " ,
-      Ticket: "-",
+      Rewardcode: " PERMUIM SEATS " ,
+      
       Reward_time:new Date() , 
       Describtion:"",
+      Type:"ticket",
+      
+      
+      ExpirationDate:new Date('2024-11-01'),
     },
     {
       ID: 12,
-      imageUrl: "2 combo sets size L + 2 ticket.png",
-      RewardName: "2 COMBO SETS SIZE L + 2 TICKET",
+      imageUrl: "supersizesetbbb.png",
+      RewardName: "SUPERSIZE SET B",
       Points: 45,
       Status: false,
       Discount: 0,
-      Reward: "COMBO SETS SIZE L" ,
-      Ticket: "TICKET",
+      Rewardcode: "xxxcombo" ,
+      
       Reward_time:new Date() , 
       Describtion:"",
+      Type:"reward",
+      
+      
+      ExpirationDate:new Date('2024-11-22'),
     },
     {
       ID: 13,
-      imageUrl: "3 premuim seats.png",
-      RewardName: "3 PREMUIM SEATS",
+      imageUrl: "gift.PNG",
+      RewardName: "GIFT",
       Points: 50,
       Status: false, 
       Discount: 0,
-      Reward: "PREMUIM SEATS" ,
-      Ticket: "-",
+      Rewardcode: "GIFT" ,
+     
       Reward_time:new Date() ,
       Describtion:"",
+      Type:"reward",
+      
+     
+      ExpirationDate:new Date('2024-15-20'),
     },
     {
       ID: 14,
-      imageUrl: "3 premuim seat + 3 ticket.png",
-      RewardName: "3 PREMUIM SEATS + 3 TICKETS ",
+      imageUrl: "3 premuim seats.png",
+      RewardName: "3 PREMUIM SEATS  ",
       Points: 60,
       Status: false, 
       Discount: 0,
-      Reward: " PREMUIM SEATS" ,
-      Ticket: "TICKETS",
+      Rewardcode: " PREMUIM SEATS" ,
+      
       Reward_time:new Date(),
       Describtion:"",
+      Type:"ticket",
+      
+     
+      ExpirationDate:new Date('2024-11-20'),
     },
     {
       ID: 15,
@@ -360,10 +460,14 @@ useEffect(() => {
       Points: 70,
       Status: false,
       Discount: 0,
-      Reward: "1 DIRECTOR PACKAGE " ,
-      Ticket: "-",
+      Rewardcode: "1 DIRECTOR PACKAGE " ,
+      
       Reward_time:new Date() , 
       Describtion:"",
+      Type:"ticket",
+     
+      
+      ExpirationDate:new Date('2024-11-09'),
     },
     {
       ID: 16,
@@ -372,34 +476,44 @@ useEffect(() => {
       Points: 80,
       Status: false,
       Discount: 0,
-      Reward: "PREMUIM SEATS" ,
-      Ticket: "-",
+      Rewardcode: "PREMUIM SEATS" ,
+      
       Reward_time:new Date() , 
       Describtion:"",
+      Type:"ticket",
+      
+      ExpirationDate:new Date('2024-12-03'),
     },
     {
       ID: 17,
-      imageUrl: "2 supersize set b + discount.png",
-      RewardName: "2 SUPERSIZE SET B + DISCOUNT ",
+      imageUrl: "4supersizesetc.png",
+      RewardName: "4 SUPERSIZE SET c",
       Points: 90,
       Status: false,
       Discount: 100,
-      Reward: " SUPERSIZE SET B " ,
-      Ticket: "-",
+      Rewardcode: " SUPERSIZE SET C " ,
+      
       Reward_time:new Date(),
       Describtion:"", 
+      Type:"reward",
+      
+      
+      ExpirationDate:new Date('2024-12-05'),
     },
     {
       ID: 18,
-      imageUrl: "10 seat new.png",
-      RewardName: "10 NORMAL SEATS + 2 SUPERSIZE SET C",
+      imageUrl: "10seat.png",
+      RewardName: "10 NORMAL SEATS ",
       Points: 100,
       Status: false, 
       Discount: 0,
-      Reward: "NORMAL SEATS" ,
-      Ticket: "-",
+      Rewardcode: "NORMAL SEATS" ,
+     
       Reward_time:new Date(),
       Describtion:"",
+      Type:"ticket",
+      
+      ExpirationDate:new Date('2024-12-12'),
     },
     // เพิ่มรายการรางวัลอื่นๆ ที่เหลือที่นี่
   ]);
@@ -410,50 +524,46 @@ useEffect(() => {
     
     
     <div className="reward-page-container">
-      <img 
-          src="Group start.png" // ปรับเส้นทางให้ถูกต้อง
-          alt="Center Image"
-          className="center-image"
-        />
-      
+    <img 
+      src="Group start.png"
+      alt="Center Image"
+      className="center-image"
+    />
 
-      <div className="my-points-container">
+    <div className="my-points-container">
       <h1>My points</h1>
       <div className="points-content">
         <div className="profile-section">
           <img 
-            src="account_circle.png" 
-            alt="Profile" 
+            src="account_circle.png"
+            alt="Profile"
             className="profile-image"
           />
           <p>{userName}</p>
-          <Link to="/My reward">
-          <button className="my-reward-button">MY REWARD</button>
+          <Link to="/checkcode">
+            <button className="my-reward-button">MY REWARD</button>
           </Link>
         </div>
         <div className="divider"></div>
         <div className="points-section">
           <img 
-            src="เหรียญ.PNG" 
-            alt="Star" 
+            src="เหรียญ.PNG"
+            alt="Star"
             className="points-icon"
           />
           <div className="balance">
-          <h2>{userPoints}</h2></div>
+            <h2>{userPoints}</h2>
+          </div>
           <p>Your Balance</p>
           <p className="description">Earn more points, redeem exciting gifts and enjoy your tbh experience</p>
-          <Link
-              to={{
-                  pathname: "/history", // URL ของหน้าประวัติ
-                  
-             }}
-              >
-              <button className="history-button" onClick={goToHistory} >HISTORY</button>
-            </Link>
-          
+          <Link to="/history">
+            <button className="history-button" onClick={goToHistory}>HISTORY</button>
+          </Link>
         </div>
       </div>
     </div>
+    
+
 
       {/* Popcorn Boxes */}
       {rewards.map((reward, index) => (
@@ -548,37 +658,35 @@ useEffect(() => {
 
       
 
-      <div className="reward-page-container">
-        <div className="rewards-container">
-          {rewards.map((reward, index) => (
-        <div
-          key={index}
-          className={`popcorn-label popcorn-label-${index + 1} ${reward.Status ? 'changed-label' : ''}`}
-        >
-          {reward.Status? "Changed" : reward.RewardName}
+      <div className="rewards-container">
+        {rewards.map((reward, index) => (
+          <div key={index} >
+            <img
+              src={getRewardImage(reward)}
+              alt={reward.RewardName}
+              className={`popcorn-box popcorn-box-${index + 1}`}
+              onClick={() => !isRewardExpired(reward) && handleImageClick(reward)}
+              style={{
+                cursor: isRewardExpired(reward) ? "not-allowed" : "pointer",
+                opacity: isRewardExpired(reward) ? 0.5 : 1,
+              }}
+            />
+            <div className={`popcorn-label popcorn-label-${index + 1}`}>
+              {reward.RewardName}
+            </div>
+          </div>
+        ))}
       </div>
-          ))}
-  </div>
 
-
-
-  {isPopupOpen && selectedReward && (
-  <RewardPopup
-    onClose={handleClosePopup}
-    onConfirm={handleConfirmReward}
-    reward={selectedReward}
-    userPoints={userPoints} // เพิ่มการส่ง userPoints ไปยัง RewardPopup
-  />
-)}
-
+      {isPopupOpen && selectedReward && (
+        <RewardPopup
+          onClose={handleClosePopup}
+          onConfirm={handleConfirmReward}
+          reward={selectedReward}
+          userPoints={userPoints}
+        />
+      )}
     </div>
-
-
-
-
-    </div>
-
-    
   );
 };
 

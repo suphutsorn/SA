@@ -6,6 +6,7 @@ import (
 	"project/config"  // ชื่อโปรเจคของคุณ
 	"project/entity"
 	"github.com/gin-gonic/gin"
+	
 )
 
 // POST /rewards สร้าง Reward ใหม่
@@ -117,3 +118,6 @@ func UpdateReward(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": reward})
 }
+
+
+
